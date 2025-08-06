@@ -29,15 +29,10 @@ const ConsultaProtocolo = () => {
     if (achado) {
       setResultado(achado);
     } else {
-      setResultado('not-found');
+      setResultado('not-found'); 
     }
 
-
-
-    
   };
-
-
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center py-10 px-4">
