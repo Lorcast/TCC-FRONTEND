@@ -10,15 +10,19 @@ export function useAuth() {
     setAuthError(null);
 
     try {
-      const res = await fetch(`http://localhost:3000/usuarios?email=${email}&senha=${senha}`);
+      // Busca usuário pelo e-mail
+      const res = await fetch(`http://localhost:3001/usuarios?email=${email}`);
       const data = await res.json();
 
-      if (data.length > 0) {
-        setUser(data[0]);
-        return data[0];
-      } else {
+      // Verifica se existe e se a senha bate
+      if (data.length === 0 || data[0].senha !== senha) {
         throw new Error("E-mail ou senha inválidos.");
       }
+
+      const usuario = data[0];
+      setUser(usuario);
+      return usuario;
+
     } catch (error) {
       setAuthError(error.message);
       return null;

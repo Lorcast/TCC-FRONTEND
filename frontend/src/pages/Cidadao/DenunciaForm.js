@@ -136,7 +136,7 @@ const DenunciaForm = () => {
 
         {/* Identificação */}
         <div>
-          <label className="block font-medium mb-1">Identificação</label>
+          <label className="block font-medium mb-1">Identificação <span className="text-red-600">*</span></label>
           <div className="flex gap-4">
             {["anonimo", "identificado"].map((tipo) => (
               <label key={tipo} className="flex items-center gap-2">

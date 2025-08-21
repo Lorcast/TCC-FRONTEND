@@ -1,46 +1,35 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../../hooks/useAuth"; 
 
 const Login = () => {
   const [formularioLogin, setFormularioLogin] = useState({
     email: "",
     senha: "",
   });
-  const [erros, setErros] = useState({});
-  const [loading, setLoading] = useState(false);
+
+  // Usa o hook
+  const { login, loading, authError } = useAuth();
+  const navigate = useNavigate();
+  const [mensagemSucesso, setMensagemSucesso] = useState(""); 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErros({});
-    setLoading(true);
 
     const { email, senha } = formularioLogin;
+    const usuario = await login(email, senha);
 
-    try {
-      const res = await fetch(
-        `http://localhost:3001/usuarios?email=${email}&senha=${senha}`
-      );
-      const data = await res.json();
+    if (usuario) {
+      // Login OK - você pode salvar no localStorage aqui, se quiser
+      localStorage.setItem("usuario", JSON.stringify(usuario));
+      const fakeToken = btoa(`${usuario.email}:${new Date().getTime()}`);
+      localStorage.setItem("token", fakeToken);
 
-      if (data.length > 0) {
-        const usuario = data[0];
-
-        // Simular token
-        const fakeToken = btoa(`${usuario.email}:${new Date().getTime()}`);
-
-        // Salvar no localStorage
-        localStorage.setItem("token", fakeToken);
-        localStorage.setItem("usuario", JSON.stringify(usuario));
-
-        alert("Login realizado com sucesso!");
-        // Redirecionar ou atualizar estado global, se necessário
-      } else {
-        setErros({ mensagem: "E-mail ou senha inválidos." });
-      }
-    } catch (err) {
-      console.error(err);
-      setErros({ mensagem: "Erro ao conectar com o servidor." });
-    } finally {
-      setLoading(false);
+      setMensagemSucesso("Login realizado com sucesso!");
+      
+      setTimeout(() => {
+        navigate("/admin"); // Redireciona após 1,5s
+      }, 1500);
     }
   };
 
@@ -95,9 +84,14 @@ const Login = () => {
           />
         </div>
 
-        {erros.mensagem && (
-          <p className="text-red-600 text-center">{erros.mensagem}</p>
+        {authError && (
+          <p className="text-red-600 text-center">{authError}</p>
         )}
+
+        {mensagemSucesso && (
+          <p className="text-green-600 text-center">{mensagemSucesso}</p>
+        )}
+
 
         <div className="flex justify-center">
           <button

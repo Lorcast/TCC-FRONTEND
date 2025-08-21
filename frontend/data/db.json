@@ -7,7 +7,24 @@
       "senha": "1234",
       "nome": "Lorena",
       "token": "token123abc456def"
+    },
+
+    {
+      "id": 2,
+      "email": "lorena.castilholi@edu.unipar.br",
+      "senha": "lorelore",
+      "nome": "Lorena",
+      "token": "token123abc456def"
+    },
+
+    {
+      "id": 3,
+      "email": "gustavosumi11@gmail.com",
+      "senha": "lololinda",
+      "nome": "Lorena",
+      "token": "token123abc456def"
     }
+
   ],
   "manifestacoes": [
     {
