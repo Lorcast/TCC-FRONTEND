@@ -1,4 +1,31 @@
+
 {
+  "usuarios": [
+    {
+      "id": 1,
+      "email": "lorena@example.com",
+      "senha": "1234",
+      "nome": "Lorena",
+      "token": "token123abc456def"
+    },
+
+    {
+      "id": 2,
+      "email": "lorena.castilholi@edu.unipar.br",
+      "senha": "lorelore",
+      "nome": "Lorena",
+      "token": "token123abc456def"
+    },
+
+    {
+      "id": 3,
+      "email": "gustavosumi11@gmail.com",
+      "senha": "lololinda",
+      "nome": "Lorena",
+      "token": "token123abc456def"
+    }
+
+  ],
   "manifestacoes": [
     {
       "id": "1",
@@ -712,6 +739,66 @@
       "situacao": "Em análise",
       "resposta": "",
       "anexo": "WhatsApp Image 2025-07-13 at 17.43.50.jpeg"
+    },
+    {
+      "id": "239b",
+      "vereador": "José",
+      "tipoManifestacao": "sugestao",
+      "identificacao": "anonimo",
+      "mensagem": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "anexos": null,
+      "nome": "",
+      "telefone": "",
+      "protocolo": 791611,
+      "dataHora": "23/07/2025, 10:12:45",
+      "situacao": "Em análise",
+      "resposta": "",
+      "anexo": null
+    },
+    {
+      "id": "ea81",
+      "vereador": "José",
+      "tipoManifestacao": "sugestao",
+      "identificacao": "anonimo",
+      "mensagem": "gageagaegeagaegaegaegae gaeg",
+      "anexos": null,
+      "nome": "",
+      "telefone": "",
+      "protocolo": 634542,
+      "dataHora": "05/08/2025, 20:21:31",
+      "situacao": "Em análise",
+      "resposta": "",
+      "anexo": null
+    },
+    {
+      "id": "e986",
+      "vereador": "Maria",
+      "tipoManifestacao": "sugestao",
+      "identificacao": "anonimo",
+      "mensagem": "agagagagagagageagage",
+      "anexos": null,
+      "nome": "",
+      "telefone": "",
+      "protocolo": 238456,
+      "dataHora": "05/08/2025, 21:23:42",
+      "situacao": "Em análise",
+      "resposta": "",
+      "anexo": null
+    },
+    {
+      "id": "6284",
+      "vereador": "José",
+      "tipoManifestacao": "sugestao",
+      "identificacao": "anonimo",
+      "mensagem": "gergergerger",
+      "anexos": null,
+      "nome": "",
+      "telefone": "",
+      "protocolo": 273251,
+      "dataHora": "05/08/2025, 21:46:16",
+      "situacao": "Em análise",
+      "resposta": "",
+      "anexo": null
     }
   ]
 }
