@@ -1,8 +1,20 @@
-// HomePage.js
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom'; // useNavigate importado corretamente
+import { useAuth } from '../../hooks/useAuth'; // useAuth importado corretamente
 
 const HomePage = () => {
+  const navigate = useNavigate(); // Hook para navegação
+  const { user, isInitializing } = useAuth(); // Acessa o user do contexto de autenticação
+
+  // Função para redirecionar conforme o login do usuário
+  const handleAdminClick = () => {
+    if (user) {
+      navigate('/admin'); // Se estiver logado, vai para a área administrativa
+    } else {
+      navigate('/login'); // Se não estiver logado, vai para a tela de login
+    }
+  };
+
   return (
     <div
       className="min-h-screen bg-cover bg-center flex items-center justify-center px-4 relative"
@@ -39,18 +51,21 @@ const HomePage = () => {
           >
             Registrar Manifestação
           </NavLink>
+
           <NavLink
             to="/consulta"
             className="bg-green-600 text-white py-3 px-6 rounded-2xl text-lg shadow hover:bg-green-700 transition"
           >
             Consultar Protocolo
           </NavLink>
-          <NavLink
-            to="/login"
+
+          {/* Agora é um botão, não mais um NavLink */}
+          <button
+            onClick={handleAdminClick}
             className="bg-gray-600 text-white py-3 px-6 rounded-2xl text-lg shadow hover:bg-gray-700 transition"
           >
             Área do Administrador
-          </NavLink>
+          </button>
         </div>
       </div>
     </div>

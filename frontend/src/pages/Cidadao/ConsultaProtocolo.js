@@ -1,5 +1,6 @@
 // ConsultaProtocolo.js
 import React, { useState } from 'react';
+import { useNavigate } from "react-router-dom";
 import { supabase } from '../../supabaseClient'; // Importa a conexão com o Supabase
 
 const ConsultaProtocolo = () => {
@@ -8,6 +9,7 @@ const ConsultaProtocolo = () => {
   const [resultado, setResultado] = useState(null); // Guarda o resultado da busca
   const [isLoading, setIsLoading] = useState(false); // Controla o feedback de "carregando"
   const [error, setError] = useState(null); // Guarda mensagens de erro
+  const navigate = useNavigate();
 
   // Função que busca os dados no Supabase ao clicar no botão
   const buscarManifestacao = async () => {
@@ -71,6 +73,14 @@ const ConsultaProtocolo = () => {
         <h2 className="text-2xl font-bold text-blue-900 mb-2">Consulta de Manifestação</h2>
         <p className="text-gray-600 mb-6">Digite o número do seu protocolo para ver o andamento.</p>
       </div>
+
+        {/* Seta de Voltar */}
+        <button
+          onClick={() => navigate(-1)}
+          className="absolute left-4 top-4 text-gray-600 hover:text-blue-700 cursor-pointer text-2xl"
+        >
+          ←
+        </button>
       
       <div className="flex flex-col sm:flex-row items-center gap-4 w-full max-w-xl">
         <input

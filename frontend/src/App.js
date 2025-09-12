@@ -9,7 +9,8 @@ import HomePage from './pages/HomePage/HomePage';
 import DenunciaForm from './pages/Cidadao/DenunciaForm';
 import Login from './pages/Admin/Auth/Login';
 import NotFound from'./pages/NotFound';
-import AreaAdmin from './pages/Admin/Dashboard/AreaAdmin';
+import Dashboard from './pages/Admin/Dashboard/AreaAdmin';
+import ProtecaoAdmin from './components/ProtecaoAdmin';
 
 
 
@@ -18,7 +19,9 @@ function App() {
     <BrowserRouter>
      <Routes>
         <Route path='login' element={<Login/>} />
-        <Route path='Admin' element={<AreaAdmin/>}/>
+
+
+        <Route path='admin' element={<ProtecaoAdmin> <Dashboard/> </ProtecaoAdmin>}/>
 
         <Route path="denuncia" element={<DenunciaForm />} />
         <Route path="consulta" element={<ConsultaProtocolo />} />

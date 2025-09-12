@@ -1,10 +1,10 @@
 // DenunciaForm.js
 import React, { useState, useEffect, useCallback } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { supabase } from "../../supabaseClient"; // Importe o cliente Supabase!
 
 const DenunciaForm = () => {
-  // Estado para o formulário
+  // 3 -  Estado para o formulário
   const [formManifestacao, setFormManifestacao] = useState({
     vereador: "", // Agora vai guardar o ID do vereador
     tipoManifestacao: "",
@@ -22,7 +22,9 @@ const DenunciaForm = () => {
   const [submitError, setSubmitError] = useState(null);
   const [vereadores, setVereadores] = useState([]);
 
-  // --- EFEITO PARA BUSCAR VEREADORES DO SUPABASE ---
+  const navigate = useNavigate();
+
+  // 4 --- EFEITO PARA BUSCAR VEREADORES DO SUPABASE ---
   useEffect(() => {
     const fetchVereadores = async () => {
       // Busca na tabela 'vereadores', selecionando o id e o nome_completo
@@ -42,7 +44,7 @@ const DenunciaForm = () => {
     fetchVereadores();
   }, []); // O array vazio [] faz isso rodar apenas uma vez quando o componente carrega
 
-  // Funções de controle do formulário (iguais às que você já tinha)
+  //5 -  Funções de controle do formulário (iguais às que você já tinha)
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormManifestacao((prev) => ({ ...prev, [name]: value }));
@@ -67,7 +69,7 @@ const DenunciaForm = () => {
     document.getElementById('anexo-input').value = "";
   }, []);
 
-  // --- FUNÇÃO DE ENVIO PARA O SUPABASE ---
+  // 6 --- FUNÇÃO DE ENVIO PARA O SUPABASE ---
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -186,7 +188,7 @@ const { error: updateError } = await supabase
     }
   };
 
-  // --- RENDERIZAÇÃO DO COMPONENTE (JSX) ---
+  // 7 ---- RENDERIZAÇÃO DO COMPONENTE (JSX) ---
   return (
     <div className="min-h-screen bg-gray-100 p-6 flex items-center justify-center">
       <form
@@ -194,6 +196,15 @@ const { error: updateError } = await supabase
         className="w-full max-w-2xl bg-white p-8 rounded-xl shadow-lg space-y-6"
         noValidate
       >
+
+        {/* Seta de Voltar */}
+        <button
+          onClick={() => navigate(-1)}
+          className="text-gray-600 hover:text-blue-700 cursor-pointer text-2xl w-fit"
+        >
+          ←
+        </button>
+
         <h2 className="text-xl font-bold text-center text-gray-700">
           Registrar Manifestação
         </h2>
@@ -234,7 +245,7 @@ const { error: updateError } = await supabase
 
         {/* Identificação */}
         <div>
-            <label className="block font-medium mb-1">Identificação</label>
+            <label className="block font-medium mb-1">Identificação <span className="text-red-600">*</span></label>
             <div className="flex gap-4">
                 {["anonimo", "identificado"].map((tipo) => (
                     <label key={tipo} className="flex items-center gap-2">
@@ -282,6 +293,8 @@ const { error: updateError } = await supabase
 
         {/* Botão de Envio */}
         <div className="flex justify-center">
+
+          
             <button
             type="submit"
             disabled={isSubmitting}
