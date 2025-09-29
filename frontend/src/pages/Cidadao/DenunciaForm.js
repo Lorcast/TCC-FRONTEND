@@ -1,8 +1,9 @@
 // DenunciaForm.js
 import React, { useState, useEffect, useCallback } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import {  useNavigate } from "react-router-dom";
 import { supabase } from "../../supabaseClient"; // Importe o cliente Supabase!
 
+//declaração do componente funcional React chamado DenunciaForm. Tudo dentro desse bloco é o componente.
 const DenunciaForm = () => {
   // 3 -  Estado para o formulário
   const [formManifestacao, setFormManifestacao] = useState({
@@ -22,6 +23,7 @@ const DenunciaForm = () => {
   const [submitError, setSubmitError] = useState(null);
   const [vereadores, setVereadores] = useState([]);
 
+  //cria a função navigate para navegar pela aplicação (ex.: navigate(-1) volta à página anterior).
   const navigate = useNavigate();
 
   // 4 --- EFEITO PARA BUSCAR VEREADORES DO SUPABASE ---

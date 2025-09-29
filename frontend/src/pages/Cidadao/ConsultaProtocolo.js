@@ -7,7 +7,7 @@ const ConsultaProtocolo = () => {
   // Estados da página
   const [protocoloDigitado, setProtocoloDigitado] = useState('');
   const [resultado, setResultado] = useState(null); // Guarda o resultado da busca
-  const [isLoading, setIsLoading] = useState(false); // Controla o feedback de "carregando"
+  const [carregando, setCarregando] = useState(false); // Controla o feedback de "carregando"
   const [error, setError] = useState(null); // Guarda mensagens de erro
   const navigate = useNavigate();
 
@@ -20,7 +20,7 @@ const ConsultaProtocolo = () => {
       setError("Por favor, digite um número de protocolo.");
       return;
     }
-    setIsLoading(true);
+    setCarregando(true);
 
     try {
       // 2. Executa a busca no Supabase
@@ -55,7 +55,7 @@ const ConsultaProtocolo = () => {
       setError("Ocorreu um erro ao realizar a consulta. Verifique sua conexão e tente novamente.");
     } finally {
       // 4. Finaliza o "carregando"
-      setIsLoading(false);
+      setCarregando(false);
     }
   };
 
@@ -93,10 +93,10 @@ const ConsultaProtocolo = () => {
         />
         <button
           onClick={buscarManifestacao}
-          disabled={isLoading}
+          disabled={carregando}
           className="bg-blue-700 text-white font-semibold px-6 py-2 rounded-md shadow hover:bg-blue-800 transition w-full sm:w-auto disabled:opacity-50 disabled:cursor-wait"
         >
-          {isLoading ? 'Consultando...' : 'Consultar'}
+          {carregando ? 'Consultando...' : 'Consultar'}
         </button>
       </div>
 
