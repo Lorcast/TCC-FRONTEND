@@ -1,44 +1,55 @@
+// src/pages/Admin/Auth/Login.js
 import { useState } from "react";
+import { supabase } from "../../../supabaseClient"; // Importe o cliente Supabase
+import { useNavigate } from "react-router-dom"; // Hook para fazer o redirecionamento
 
 const Login = () => {
   const [formularioLogin, setFormularioLogin] = useState({
     email: "",
     senha: "",
   });
-  const [erros, setErros] = useState({});
+  const [erro, setErro] = useState(null);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormularioLogin((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErros({});
+    setErro(null);
     setLoading(true);
 
     const { email, senha } = formularioLogin;
 
     try {
-      const res = await fetch(
-        `http://localhost:3001/usuarios?email=${email}&senha=${senha}`
-      );
-      const data = await res.json();
+      // Autenticação com Supabase
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: senha,
+      });
 
-      if (data.length > 0) {
-        const usuario = data[0];
-
-        // Simular token
-        const fakeToken = btoa(`${usuario.email}:${new Date().getTime()}`);
-
-        // Salvar no localStorage
-        localStorage.setItem("token", fakeToken);
-        localStorage.setItem("usuario", JSON.stringify(usuario));
-
-        alert("Login realizado com sucesso!");
-        // Redirecionar ou atualizar estado global, se necessário
-      } else {
-        setErros({ mensagem: "E-mail ou senha inválidos." });
+      if (error) {
+        throw error;
       }
+
+      if (data.session) {
+        console.log("Login realizado com sucesso!", data.session);
+        // Redireciona para a página de dashboard do admin
+        navigate("/admin/dashboard");
+      } else {
+        setErro("Ocorreu um erro inesperado durante o login.");
+      }
+
     } catch (err) {
-      console.error(err);
-      setErros({ mensagem: "Erro ao conectar com o servidor." });
+      console.error("Erro no login:", err.message);
+      if (err.message.includes("Invalid login credentials")) {
+        setErro("E-mail ou senha inválidos.");
+      } else {
+        setErro("Erro ao conectar com o servidor. Verifique sua conexão.");
+      }
     } finally {
       setLoading(false);
     }
@@ -50,11 +61,8 @@ const Login = () => {
         onSubmit={handleSubmit}
         className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md space-y-6"
       >
-        <h2 className="text-2xl font-bold text-center text-gray-800">Login</h2>
-        <p className="text-center text-gray-600">
-          Faça o login para ver o que há de novo.
-        </p>
-
+        <h2 className="text-2xl font-bold text-center text-gray-800">Login de Administrador</h2>
+        
         <div>
           <label className="block font-medium mb-1">
             E-mail <span className="text-red-600">*</span>
@@ -65,12 +73,7 @@ const Login = () => {
             required
             placeholder="Digite seu E-mail"
             value={formularioLogin.email}
-            onChange={(e) =>
-              setFormularioLogin({
-                ...formularioLogin,
-                email: e.target.value,
-              })
-            }
+            onChange={handleChange}
             className="w-full p-2 border rounded"
           />
         </div>
@@ -85,23 +88,18 @@ const Login = () => {
             required
             placeholder="Digite sua Senha"
             value={formularioLogin.senha}
-            onChange={(e) =>
-              setFormularioLogin({
-                ...formularioLogin,
-                senha: e.target.value,
-              })
-            }
+            onChange={handleChange}
             className="w-full p-2 border rounded"
           />
         </div>
 
-        {erros.mensagem && (
-          <p className="text-red-600 text-center">{erros.mensagem}</p>
+        {erro && (
+          <p className="text-red-600 text-center bg-red-100 p-3 rounded-md">{erro}</p>
         )}
 
         <div className="flex justify-center">
           <button
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-10 rounded-md w-full text-center"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-10 rounded-md w-full text-center disabled:opacity-50"
             type="submit"
             disabled={loading}
           >

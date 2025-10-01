@@ -55,7 +55,7 @@ const ConsultaProtocolo = () => {
       // 4. Finaliza o "carregando"
       setIsLoading(false);
     }
-  }, [])
+  }, [protocoloDigitado]); // <-- CORREÇÃO APLICADA AQUI
   
  
 
