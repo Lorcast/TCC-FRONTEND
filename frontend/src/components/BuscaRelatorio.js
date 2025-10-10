@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
 
-const BuscaRelatorio = ({ onFiltrar }) => {
+const BuscaRelatorio = ({ filtrar }) => {
   const [protocolo, setProtocolo] = useState("");
   const [vereador, setVereador] = useState("");
   const [tipo, setTipo] = useState("");
@@ -9,7 +9,7 @@ const BuscaRelatorio = ({ onFiltrar }) => {
   const [data, setData] = useState("");
 
   const [vereadoresOpcoes, setVereadoresOpcoes] = useState([]);
-  const [tiposOpcoes, setTiposOpcoes] = useState([]);
+  const [tiposManifestacao, setTiposManifestacao] = useState([]);
 
   useEffect(() => {
     const fetchOpcoes = async () => {
@@ -17,15 +17,15 @@ const BuscaRelatorio = ({ onFiltrar }) => {
         .from("vereadores")
         .select("id, nome_completo")
         .order("nome_completo");
-
       setVereadoresOpcoes(vereadoresData || []);
 
       const { data: tiposData } = await supabase
         .from("solicitacoes")
         .select("tipo");
+
       if (tiposData) {
         const unicos = [...new Set(tiposData.map((t) => t.tipo))];
-        setTiposOpcoes(unicos);
+        setTiposManifestacao(unicos);
       }
     };
 
@@ -33,7 +33,7 @@ const BuscaRelatorio = ({ onFiltrar }) => {
   }, []);
 
   const aplicarFiltros = () => {
-    onFiltrar({ protocolo, vereador, tipo, status, data });
+    filtrar({ protocolo, vereador, tipo, status, data });
   };
 
   return (
@@ -68,7 +68,7 @@ const BuscaRelatorio = ({ onFiltrar }) => {
           className="border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
         >
           <option value="">Todos os tipos</option>
-          {tiposOpcoes.map((t) => (
+          {tiposManifestacao.map((t) => (
             <option key={t} value={t}>
               {t}
             </option>
@@ -82,7 +82,7 @@ const BuscaRelatorio = ({ onFiltrar }) => {
         >
           <option value="">Todos os status</option>
           <option value="Pendente">Pendente</option>
-          <option value="em Análise">em Análise</option>
+          <option value="Em análise">Em análise</option>
           <option value="Finalizado">Finalizado</option>
         </select>
 
@@ -97,19 +97,15 @@ const BuscaRelatorio = ({ onFiltrar }) => {
       <div className="flex justify-end mt-3 gap-2">
         <button
           onClick={aplicarFiltros}
-          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition"
+          className="bg-green-700 text-white font-semibold px-6 py-2 rounded-md shadow hover:bg-green-800 transition w-full sm:w-auto disabled:opacity-50 disabled:cursor-wait"
         >
           Buscar
         </button>
-            
-        <button
-          
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition"
-        >
+
+        <button className="bg-blue-700 text-white font-semibold px-6 py-2 rounded-md shadow hover:bg-blue-800 transition w-full sm:w-auto disabled:opacity-50 disabled:cursor-wait">
           Relatório
         </button>
       </div>
-      
     </div>
   );
 };

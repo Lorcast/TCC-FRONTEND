@@ -4,73 +4,91 @@ import { supabase } from "../../../supabaseClient";
 import Navbar from "../../../components/NavBar";
 import ProtecaoAdmin from "../../../components/ProtecaoAdmin";
 import BuscaRelatorio from "../../../components/BuscaRelatorio";
+import Paginacao from "../../../components/Paginacao";
 
 const Dashboard = () => {
   const [manifestacoes, setManifestacoes] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [filtroAtivo, setFiltroAtivo] = useState(false);
-  const [pagina, setPagina] = useState(1);
-  const [totalRegistros, setTotalRegistros] = useState(0);
-  const [filtrosAtuais, setFiltrosAtuais] = useState({});
-  const registrosPorPagina = 10;
+
+  const [offset, setOffset] = useState(0);
+  const [total, setTotal] = useState(0);
+  const limite = 10;
+
   const navigate = useNavigate();
 
-  const fetchManifestacoes = async (filtros = {}, paginaAtual = pagina) => {
+  const fetchManifestacoes = async (filtros = {}, offsetAtual = 0) => {
     setCarregando(true);
-    setFiltrosAtuais(filtros);
 
     const temFiltros =
-      filtros.protocolo || filtros.vereador || filtros.tipo || filtros.status || filtros.data;
+      filtros.protocolo ||
+      filtros.vereador ||
+      filtros.tipo ||
+      filtros.status ||
+      filtros.data;
     setFiltroAtivo(!!temFiltros);
 
     let query = supabase
       .from("solicitacoes")
       .select(
         `
-        id, protocolo, solicitante_nome, tipo, created_at, status, descricao,
-        resposta_admin, vereadores (nome_completo)
+        id,
+        protocolo,
+        solicitante_nome,
+        tipo,
+        created_at,
+        status,
+        descricao,
+        resposta_admin,
+        id_vereador_destino,
+        vereadores ( nome_completo )
       `,
         { count: "exact" }
       );
 
-    if (filtros.protocolo) query = query.eq("protocolo", filtros.protocolo);
-    if (filtros.vereador) query = query.eq("id_vereador_destino", filtros.vereador);
-    if (filtros.tipo) query = query.eq("tipo", filtros.tipo);
-    if (filtros.status) query = query.eq("status", filtros.status);
-    if (filtros.data) query = query.eq("created_at", filtros.data);
+    if (filtros.protocolo) {
+      query = query.ilike("protocolo", `%${filtros.protocolo}%`);
+    }
+    if (filtros.vereador) {
+      query = query.eq("id_vereador_destino", filtros.vereador);
+    }
+    if (filtros.tipo) {
+      query = query.eq("tipo", filtros.tipo);
+    }
+    if (filtros.status) {
+      query = query.eq("status", filtros.status);
+    }
 
-    // Paginação
-    const inicio = (paginaAtual - 1) * registrosPorPagina;
-    const fim = inicio + registrosPorPagina - 1;
-    query = query.range(inicio, fim).order("created_at", { ascending: false });
+    if (filtros.data) {
+      const dataLocalInicio = new Date(`${filtros.data}T00:00:00`);
+      const dataLocalFim = new Date(`${filtros.data}T23:59:59.999`);
+
+      query = query
+        .gte("created_at", dataLocalInicio.toISOString())
+        .lte("created_at", dataLocalFim.toISOString());
+    }
+
+    query = query
+      .order("created_at", { ascending: false })
+      .range(offsetAtual, offsetAtual + limite - 1);
 
     const { data, count, error } = await query;
 
     if (error) {
       console.error("Erro ao carregar manifestações:", error);
       setManifestacoes([]);
-      setTotalRegistros(0);
+      setTotal(0);
     } else {
       setManifestacoes(data || []);
-      setTotalRegistros(count || 0);
+      setTotal(count || 0);
     }
 
     setCarregando(false);
   };
 
   useEffect(() => {
-    fetchManifestacoes({}, pagina);
-  }, [pagina]);
-
-  const totalPaginas = Math.ceil(totalRegistros / registrosPorPagina);
-
-  const irParaProxima = () => {
-    if (pagina < totalPaginas) setPagina(pagina + 1);
-  };
-
-  const irParaAnterior = () => {
-    if (pagina > 1) setPagina(pagina - 1);
-  };
+    fetchManifestacoes({}, offset);
+  }, [offset]);
 
   return (
     <ProtecaoAdmin>
@@ -81,14 +99,16 @@ const Dashboard = () => {
           <h1 className="text-2xl font-semibold mb-4">Painel do Administrador</h1>
 
           <BuscaRelatorio
-            onFiltrar={(filtros) => {
-              setPagina(1);
-              fetchManifestacoes(filtros, 1);
+            filtrar={(filtros) => {
+              setOffset(0);
+              fetchManifestacoes(filtros, 0);
             }}
           />
 
           {carregando ? (
-            <p className="text-center mt-4 text-gray-700">Carregando manifestações...</p>
+            <p className="text-center mt-4 text-gray-700">
+              Carregando manifestações...
+            </p>
           ) : manifestacoes.length === 0 ? (
             <p className="text-center mt-4 text-gray-700">
               {filtroAtivo
@@ -116,32 +136,41 @@ const Dashboard = () => {
                       <tr
                         key={m.id}
                         className={`hover:bg-gray-50 ${
-                          m.status === "em Análise"
-                            ? "bg-gray-200"
-                            : m.status === "Finalizado"
-                            ? "bg-blue-100"
-                            : m.status === "Pendente"
-                            ? "bg-green-200"
-                            : ""
+                          m.status === "Pendente"
+                            ? "bg-green-300"
+                            : m.status === "Em análise"
+                            ? "bg-orange-100"
+                            : "bg-gray-200"
                         }`}
                       >
-                        <td className="px-2 py-1 border font-mono">{m.protocolo}</td>
-                        <td className="px-2 py-1 border">{m.is_anonimo ? "Anônimo" : m.solicitante_nome}</td>
-                        <td className="px-2 py-1 border">{m.tipo}</td>
-                        <td className="px-2 py-1 border">{m.vereadores?.nome_completo || "N/D"}</td>
-                        <td className="px-2 py-1 border">{m.status}</td>
-                        <td className="px-2 py-1 border truncate max-w-xs">{m.descricao}</td>
+                        <td className="px-2 py-1 border font-mono">
+                          {m.protocolo}
+                        </td>
                         <td className="px-2 py-1 border">
-                          {new Date(m.created_at).toLocaleDateString("pt-BR")}{" "}
-                          {new Date(m.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                          {m.is_anonimo
+                            ? "Anônimo"
+                            : m.solicitante_nome || "Anônimo"}
+                        </td>
+                        <td className="px-2 py-1 border">{m.tipo}</td>
+                        <td className="px-2 py-1 border">
+                          {m.vereadores?.nome_completo || "N/D"}
+                        </td>
+                        <td className="px-2 py-1 border">{m.status}</td>
+                        <td className="px-2 py-1 border truncate max-w-xs">
+                          {m.descricao}
+                        </td>
+                        <td className="px-2 py-1 border">
+                          {new Date(m.created_at).toLocaleString("pt-BR")}
                         </td>
                         <td className="px-2 py-1 border text-center">
-                         <button
-  className="text-blue-600 underline text-sm"
-  onClick={() => navigate(`/admin/manifestacao/${m.protocolo}`)}
->
-  Ver Detalhes
-</button>
+                          <button
+                            className="text-blue-600 underline text-sm"
+                            onClick={() =>
+                              navigate(`/admin/manifestacao/${m.protocolo}`)
+                            }
+                          >
+                            Ver Detalhes
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -149,25 +178,12 @@ const Dashboard = () => {
                 </table>
               </div>
 
-              <div className="flex justify-between items-center mt-4">
-                <button
-                  onClick={irParaAnterior}
-                  disabled={pagina === 1}
-                  className="px-3 py-1 border rounded disabled:opacity-50"
-                >
-                  Anterior
-                </button>
-                <span>
-                  Página {pagina} de {totalPaginas}
-                </span>
-                <button
-                  onClick={irParaProxima}
-                  disabled={pagina === totalPaginas}
-                  className="px-3 py-1 border rounded disabled:opacity-50"
-                >
-                  Próxima
-                </button>
-              </div>
+              <Paginacao
+                limite={limite}
+                total={total}
+                offset={offset}
+                setOffset={setOffset}
+              />
             </>
           )}
         </main>

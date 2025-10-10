@@ -1,6 +1,7 @@
 // DenunciaForm.js
 import React, { useState, useEffect, useCallback } from "react";
 import {  useNavigate } from "react-router-dom";
+import { GoArrowLeft } from "react-icons/go";
 import { supabase } from "../../supabaseClient"; // Importe o cliente Supabase!
 
 //declaração do componente funcional React chamado DenunciaForm. Tudo dentro desse bloco é o componente.
@@ -204,7 +205,7 @@ const { error: updateError } = await supabase
           onClick={() => navigate(-1)}
           className="text-gray-600 hover:text-blue-700 cursor-pointer text-2xl w-fit"
         >
-          ←
+          <GoArrowLeft />
         </button>
 
         <h2 className="text-xl font-bold text-center text-gray-700">
@@ -300,7 +301,7 @@ const { error: updateError } = await supabase
             <button
             type="submit"
             disabled={isSubmitting}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="bg-blue-700 text-white font-semibold px-6 py-2 rounded-md shadow hover:bg-blue-800 transition w-full sm:w-auto disabled:opacity-50 disabled:cursor-wait"
             >
             {isSubmitting ? "Enviando..." : "Enviar Manifestação"}
             </button>

@@ -1,6 +1,7 @@
 // ConsultaProtocolo.js
 import React, { useState } from 'react';
 import { useNavigate } from "react-router-dom";
+import { GoArrowLeft } from "react-icons/go";
 import { supabase } from '../../supabaseClient'; // Importa a conexão com o Supabase
 
 const ConsultaProtocolo = () => {
@@ -79,7 +80,7 @@ const ConsultaProtocolo = () => {
           onClick={() => navigate(-1)}
           className="absolute left-4 top-4 text-gray-600 hover:text-blue-700 cursor-pointer text-2xl"
         >
-          ←
+         <GoArrowLeft />
         </button>
       
       <div className="flex flex-col sm:flex-row items-center gap-4 w-full max-w-xl">
@@ -118,18 +119,12 @@ const ConsultaProtocolo = () => {
             
             <div><strong>Protocolo:</strong> <span className="font-mono">{resultado.protocolo}</span></div>
             <div><strong>Registrado em:</strong> {new Date(resultado.created_at).toLocaleString('pt-BR')}</div>
+            
             <div><strong>Status:</strong> <span className="font-semibold px-2 py-1 rounded-full bg-blue-100 text-blue-800">{resultado.status}</span></div>
             
             <div className="pt-2">
               <p><strong>Sua Mensagem:</strong></p>
               <p className="bg-gray-50 p-3 rounded-md border text-gray-700 whitespace-pre-wrap">{resultado.descricao}</p>
-            </div>
-
-            <div className="pt-2">
-              <p><strong>Resposta da Ouvidoria:</strong></p>
-              <p className="bg-blue-50 p-3 rounded-md border border-blue-200 text-blue-900">
-                {resultado.resposta_admin || 'Sua manifestação ainda não foi respondida.'}
-              </p>
             </div>
 
             <div>
@@ -147,6 +142,15 @@ const ConsultaProtocolo = () => {
                 <span className="text-gray-600 ml-2">Nenhum anexo enviado.</span>
               )}
             </div>
+
+            <div className="pt-2">
+              <p><strong>Resposta da Ouvidoria:</strong></p>
+              <p className="bg-blue-50 p-3 rounded-md border border-blue-200 text-blue-900">
+                {resultado.resposta_admin || 'Sua manifestação ainda não foi respondida.'}
+              </p>
+            </div>
+
+            
           </div>
         )}
       </div>

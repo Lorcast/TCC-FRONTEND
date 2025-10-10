@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { GoArrowLeft } from "react-icons/go";
 import { useAuth } from "../../../hooks/useAuth";
 import ProtecaoLogin from "../../../components/ProtecaoLogin";
 
@@ -75,7 +76,7 @@ const Login = () => {
             onClick={() => navigate("/", { replace: true })}
             className="text-gray-600 hover:text-blue-700 cursor-pointer text-2xl w-fit"
           >
-            ←
+           <GoArrowLeft />
           </button>
 
           <h2 className="text-2xl font-bold text-center text-gray-800">Login</h2>
@@ -131,12 +132,13 @@ const Login = () => {
 
           <div className="flex justify-center">
             <button
-              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-10 rounded-md w-full text-center"
+              className="bg-blue-700 hover:bg-blue-700 text-white font-semibold py-2 px-10 rounded-md w-full text-center"
               type="submit"
               disabled={loading}
             >
               {loading ? "Entrando..." : "Entrar"}
             </button>
+            
           </div>
         </form>
       </div>

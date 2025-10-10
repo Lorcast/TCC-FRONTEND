@@ -11,7 +11,7 @@ import Login from './pages/Admin/Auth/Login';
 import NotFound from'./pages/NotFound';
 import Dashboard from './pages/Admin/Dashboard/AreaAdmin';
 import ProtecaoAdmin from './components/ProtecaoAdmin';
-import VerManifestacao  from './pages/Admin/Manifestacoes/VerManifestacao'; 
+import VerDetalhes  from './pages/Admin/Manifestacoes/VerDetalhes'; 
 
 
 
@@ -24,7 +24,7 @@ function App() {
 
 
         <Route path='admin' element={<ProtecaoAdmin> <Dashboard/> </ProtecaoAdmin>}/>
-        <Route path='admin/Manifestacao/:protocolo' element={<ProtecaoAdmin> <VerManifestacao/> </ProtecaoAdmin>}/>
+        <Route path='admin/Manifestacao/:protocolo' element={<ProtecaoAdmin> <VerDetalhes/> </ProtecaoAdmin>}/>
 
         <Route path="denuncia" element={<DenunciaForm />} />
         <Route path="consulta" element={<ConsultaProtocolo />} />
