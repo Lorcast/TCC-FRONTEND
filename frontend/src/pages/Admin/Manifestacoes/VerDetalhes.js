@@ -12,12 +12,13 @@ const VerDetalhes = () => {
   const [enviando, setEnviando] = useState(false);
   const [mensagem, setMensagem] = useState("");
   const [respostaVazia, setRespostaVazia] = useState(false);
+  
 
   const { protocolo } = useParams();
   const respostaRef = useRef(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
+ 
     const fetchManifestacao = async () => {
       setCarregando(true);
       try {
@@ -37,7 +38,7 @@ const VerDetalhes = () => {
           `)
           .eq("protocolo", protocolo)
           .single();
-console.log("Manifestação carregada:", data);
+
         if (error) throw error;
 
         // Se status pendente, atualiza para em análise
@@ -55,33 +56,27 @@ console.log("Manifestação carregada:", data);
 
         // Busca nome do vereador pelo id_vereador
         if (data.id_vereador_destino) {
-          const { data: vereadorData, error: vereadorError } = await supabase
-            .from("vereadores")
-            .select("nome_completo")
-            .eq("id", data.id_vereador_destino)
-            .single();
-
-          if (vereadorError || !vereadorData) {
-            setVereadorNome("Não informado");
-          } else {
-            setVereadorNome(vereadorData.nome_completo);
-          }
-        } else {
-          setVereadorNome("Não informado");
-        }
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setCarregando(false);
+        const { data: vereadorData } = await supabase
+          .from("vereadores")
+          .select("nome_completo")
+          .eq("id", data.id_vereador_destino)
+          .single();
+        setVereadorNome(vereadorData?.nome_completo ?? "Não informado");
       }
-    };
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setCarregando(false);
+    }
+  };
 
+  useEffect(() => {
     fetchManifestacao();
   }, [protocolo]);
 
   const enviarResposta = async () => {
     if (!respostaAdmin.trim()) {
-      setMensagem("Por favor, escreva uma resposta antes de enviar.");
+      setMensagem(" escreva uma resposta antes de enviar.");
       setRespostaVazia(true);
       respostaRef.current?.scrollIntoView({ behavior: "smooth" });
       return;
@@ -92,12 +87,16 @@ console.log("Manifestação carregada:", data);
     setEnviando(true);
 
     try {
+
+            
       const { error } = await supabase
         .from("solicitacoes")
-        .update({ resposta_admin: respostaAdmin, status: "Finalizado" })
+        .update({ resposta_admin: respostaAdmin, status: "" })
         .eq("protocolo", protocolo);
 
       if (error) throw error;
+
+      
 
       setManifestacao((prev) => ({
         ...prev,
@@ -105,9 +104,9 @@ console.log("Manifestação carregada:", data);
         status: "Finalizado",
       }));
 
-      setMensagem("Resposta enviada com sucesso!");
+      setMensagem("Resposta enviada!");
     } catch (err) {
-      setMensagem("Erro ao enviar resposta: " + err.message);
+      setMensagem("Erro ao enviar: " + err.message);
     } finally {
       setEnviando(false);
     }
@@ -132,27 +131,16 @@ console.log("Manifestação carregada:", data);
           <h2 className="text-2xl font-bold mb-4 text-gray-800">Detalhes da Manifestação</h2>
 
           <div className="space-y-2">
-            <p>
-              <span className="font-semibold">Protocolo:</span> {manifestacao.protocolo}
-            </p>
-            <p>
-              <span className="font-semibold">Registrado em:</span>{" "}
-              {new Date(manifestacao.created_at).toLocaleString("pt-BR")}
-            </p>
-            <p>
-              <span className="font-semibold">Status:</span> {manifestacao.status}
-            </p>
-            <p>
-              <span className="font-semibold">Tipo:</span> {manifestacao.tipo}
-            </p>
-            <p>
-              <span className="font-semibold">Vereador:</span> {vereadorNome}
-            </p>
-            <p>
-              <span className="font-semibold">Descrição:</span> {manifestacao.descricao}
-            </p>
+            <p><strong>Protocolo:</strong> {manifestacao.protocolo}</p>
+            <p><strong>Registrado em:</strong> {new Date(manifestacao.created_at).toLocaleString("pt-BR")}</p>
+            <p><strong>Status:</strong> {manifestacao.status}</p>
+            <p><strong>Tipo:</strong> {manifestacao.tipo}</p>
+            <p><strong>Vereador:</strong> {vereadorNome}</p>
+            <p><strong>Descrição:</strong> {manifestacao.descricao}</p>
           </div>
 
+
+<div>
           <h3 className="mt-6 text-xl font-semibold text-gray-700">Anexos</h3>
           {manifestacao.anexos?.length > 0 ? (
             <ul className="list-disc list-inside mt-2 space-y-1">
@@ -173,6 +161,9 @@ console.log("Manifestação carregada:", data);
             <p className="mt-2 text-gray-500">Sem anexos.</p>
           )}
 
+</div>
+          
+
           <div className="mt-6">
             <label className="block font-semibold mb-2 text-gray-700">Resposta do Admin</label>
             <textarea
@@ -191,6 +182,8 @@ console.log("Manifestação carregada:", data);
     <p>
       <strong>Respondido em:</strong>{" "}
           </p>
+
+          
   </div>
 )}
           </div>
@@ -215,14 +208,14 @@ console.log("Manifestação carregada:", data);
            
 
           {mensagem && (
-            <p
-              className={`mt-4 text-center font-semibold ${
-                mensagem.includes("sucesso") ? "text-green-600" : "text-red-600"
-              }`}
-            >
-              {mensagem}
-            </p>
-          )}
+  <p
+    className={`mt-4 text-center font-semibold ${
+      mensagem === "Resposta enviada!" ? "text-green-600" : "text-red-600"
+    }`}
+  >
+    {mensagem}
+  </p>
+)}
         </div>
       )}
     </div>

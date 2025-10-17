@@ -50,7 +50,7 @@ const NavBar = () => {
         {/* Navegação desktop */}
         <nav className="hidden sm:flex space-x-6">
           <button
-            onClick={() => navigate("/perfil")}
+            onClick={() => navigate("/admin/vereadores")}
             className="hover:underline"
           >
             Perfil
@@ -66,7 +66,7 @@ const NavBar = () => {
         <nav className="sm:hidden mt-2 flex flex-col space-y-2">
           <button
             onClick={() => {
-              navigate("/perfil");
+              navigate("/admin/vereadores");
               setMenuOpen(false);
             }}
             className="hover:underline text-left"

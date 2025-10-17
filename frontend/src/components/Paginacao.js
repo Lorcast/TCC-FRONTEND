@@ -1,5 +1,3 @@
-import React from "react";
-
 const Paginacao = ({ limite, total, offset, setOffset }) => {
   const totalPaginas = Math.ceil(total / limite) || 1;
   const paginaAtual = Math.floor(offset / limite) + 1;

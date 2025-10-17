@@ -9,9 +9,12 @@ import HomePage from './pages/HomePage/HomePage';
 import DenunciaForm from './pages/Cidadao/DenunciaForm';
 import Login from './pages/Admin/Auth/Login';
 import NotFound from'./pages/NotFound';
-import Dashboard from './pages/Admin/Dashboard/AreaAdmin';
+import AreaAdmin from './pages/Admin/Dashboard/AreaAdmin';
 import ProtecaoAdmin from './components/ProtecaoAdmin';
 import VerDetalhes  from './pages/Admin/Manifestacoes/VerDetalhes'; 
+import PerfiVereadores from './pages/Admin/Vereadores/PerfilVereadores';
+import CadastrarVereadores from './pages/Admin/Vereadores/CadastrarVereadores';
+
 
 
 
@@ -23,8 +26,11 @@ function App() {
         <Route path='login' element={<Login/>} />
 
 
-        <Route path='admin' element={<ProtecaoAdmin> <Dashboard/> </ProtecaoAdmin>}/>
+        <Route path='admin' element={<ProtecaoAdmin> <AreaAdmin/> </ProtecaoAdmin>}/>
         <Route path='admin/Manifestacao/:protocolo' element={<ProtecaoAdmin> <VerDetalhes/> </ProtecaoAdmin>}/>
+        <Route path='admin/vereadores' element={<PerfiVereadores/>}/>
+        <Route path='admin/vereadores/cadastro' element={<CadastrarVereadores/>}/>
+        <Route path="/admin/vereadores/cadastro/:id" element={<CadastrarVereadores />} />
 
         <Route path="denuncia" element={<DenunciaForm />} />
         <Route path="consulta" element={<ConsultaProtocolo />} />

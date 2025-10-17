@@ -76,7 +76,7 @@ const DenunciaForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // 1. Validação do formulário (sua lógica original, que é ótima!)
+    // A. Validação do formulário (sua lógica original, que é ótima!)
     const novosErros = {};
     if (!formManifestacao.vereador) {
         novosErros.vereador = "Por favor, selecione um vereador.";
@@ -103,20 +103,20 @@ const DenunciaForm = () => {
       return;
     }
 
-    // Limpa os erros e inicia o estado de envio
+    // b.Limpa os erros e inicia o estado de envio
     setErros({});
     setSubmitError(null);
     setProtocolo(null);
     setIsSubmitting(true);
 
     try {
-      // 2. Upload do anexo (se existir)
+      // c. Upload do anexo (se existir)
       let caminhoAnexo = null;
       if (formManifestacao.anexos) {
         // A CORREÇÃO:
 const file = formManifestacao.anexos;
 
-// "Limpa" o nome do arquivo para remover caracteres especiais e acentos
+// d. "Limpa" o nome do arquivo para remover caracteres especiais e acentos
 const safeFileName = file.name
   .normalize("NFD") // Separa os acentos das letras (ex: 'ç' vira 'c' e '¸')
   .replace(/[\u0300-\u036f]/g, "") // Remove os acentos que foram separados
@@ -134,7 +134,7 @@ const { error: uploadError } = await supabase.storage
         caminhoAnexo = filePath;
       }
 
-      // 3. Preparar os dados para salvar na tabela 'solicitacoes'
+      // e. Preparar os dados para salvar na tabela 'solicitacoes'
       const dadosParaSalvar = {
         id_vereador_destino: formManifestacao.vereador,
         tipo: formManifestacao.tipoManifestacao,
@@ -145,7 +145,7 @@ const { error: uploadError } = await supabase.storage
         status: 'Pendente'
       };
 
-      // 4. Inserir a manifestação e pegar o ID dela de volta
+      // f. Inserir a manifestação e pegar o ID dela de volta
       const { data: solicitacao, error: insertError } = await supabase
         .from('solicitacoes')
         .insert(dadosParaSalvar)
@@ -155,7 +155,7 @@ const { error: uploadError } = await supabase.storage
       if (insertError) throw insertError;
       const novoId = solicitacao.id;
 
-      // 5. Gerar e salvar o número de protocolo (NOVA VERSÃO)
+      //  Gerar e salvar o número de protocolo (NOVA VERSÃO)
 const hoje = new Date();
 const dia = String(hoje.getDate()).padStart(2, '0');
 const mes = String(hoje.getMonth() + 1).padStart(2, '0'); // Mês começa em 0, por isso +1
@@ -170,7 +170,7 @@ const { error: updateError } = await supabase
 
       if (updateError) throw updateError;
       
-      // 6. Salvar a referência do anexo na tabela 'anexos' (se houver)
+      //  Salvar a referência do anexo na tabela 'anexos' (se houver)
       if (caminhoAnexo) {
         await supabase.from('anexos').insert({
           id_solicitacao: novoId,
@@ -179,7 +179,7 @@ const { error: updateError } = await supabase
         });
       }
 
-      // 7. Sucesso! Exibir protocolo e limpar o formulário
+      //  Sucesso! Exibir protocolo e limpar o formulário
       setProtocolo(numeroProtocoloGerado);
       resetForm();
 
@@ -309,7 +309,7 @@ const { error: updateError } = await supabase
 
         {/* Mensagem de Sucesso (Protocolo) */}
         {protocolo && (
-          <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-md text-center">
+          <div className="  text-green-700 p-4 rounded-md text-center">
             <p className="font-bold">Manifestação enviada com sucesso!</p>
             <p>Guarde seu número de protocolo para consulta: <strong>{protocolo}</strong></p>
           </div>

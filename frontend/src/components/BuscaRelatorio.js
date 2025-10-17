@@ -6,7 +6,9 @@ const BuscaRelatorio = ({ filtrar }) => {
   const [vereador, setVereador] = useState("");
   const [tipo, setTipo] = useState("");
   const [status, setStatus] = useState("");
-  const [data, setData] = useState("");
+  const [dataInicial, setDataInicial] = useState("");
+  const [dataFinal, setDataFinal] = useState("");
+  const [mensagem, setMensagem] = useState(""); 
 
   const [vereadoresOpcoes, setVereadoresOpcoes] = useState([]);
   const [tiposManifestacao, setTiposManifestacao] = useState([]);
@@ -33,13 +35,16 @@ const BuscaRelatorio = ({ filtrar }) => {
   }, []);
 
   const aplicarFiltros = () => {
-    filtrar({ protocolo, vereador, tipo, status, data });
+    filtrar({ protocolo, vereador, tipo, status, dataInicial, dataFinal, mensagem  });
   };
 
+  
+
   return (
-    <div className="bg-white shadow-md rounded-lg p-4 mb-6">
+    <div className="bg-white shadow-md rounded-lg p-6 mb-6 mt-10">
       <h2 className="text-xl font-semibold mb-4">Busca e Relatórios</h2>
 
+{/*protocolo*/}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
         <input
           type="text"
@@ -48,7 +53,7 @@ const BuscaRelatorio = ({ filtrar }) => {
           onChange={(e) => setProtocolo(e.target.value)}
           className="border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
         />
-
+{/*vereador*/}
         <select
           value={vereador}
           onChange={(e) => setVereador(e.target.value)}
@@ -61,7 +66,7 @@ const BuscaRelatorio = ({ filtrar }) => {
             </option>
           ))}
         </select>
-
+{/*tipo*/}
         <select
           value={tipo}
           onChange={(e) => setTipo(e.target.value)}
@@ -74,7 +79,7 @@ const BuscaRelatorio = ({ filtrar }) => {
             </option>
           ))}
         </select>
-
+{/*status*/}
         <select
           value={status}
           onChange={(e) => setStatus(e.target.value)}
@@ -85,11 +90,30 @@ const BuscaRelatorio = ({ filtrar }) => {
           <option value="Em análise">Em análise</option>
           <option value="Finalizado">Finalizado</option>
         </select>
+{/*data inicial*/}
+        <input
+       
+          type="date"
+          value={dataInicial}
+          onChange={(e) => setDataInicial(e.target.value)}
+          className="border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+        />
 
+
+{/* Data Final */}
         <input
           type="date"
-          value={data}
-          onChange={(e) => setData(e.target.value)}
+          value={dataFinal}
+          onChange={(e) => setDataFinal(e.target.value)}
+          className="border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+        />
+
+{/* Campo de Mensagem */}
+        <input
+          type="text"
+          placeholder="Mensagem"
+          value={mensagem}
+          onChange={(e) => setMensagem(e.target.value)}
           className="border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
         />
       </div>

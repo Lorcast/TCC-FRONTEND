@@ -6,7 +6,7 @@ import ProtecaoAdmin from "../../../components/ProtecaoAdmin";
 import BuscaRelatorio from "../../../components/BuscaRelatorio";
 import Paginacao from "../../../components/Paginacao";
 
-const Dashboard = () => {
+const AreaAdmin = () => {
   const [manifestacoes, setManifestacoes] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [filtroAtivo, setFiltroAtivo] = useState(false);
@@ -46,44 +46,38 @@ const Dashboard = () => {
         { count: "exact" }
       );
 
-    if (filtros.protocolo) {
-      query = query.ilike("protocolo", `%${filtros.protocolo}%`);
-    }
-    if (filtros.vereador) {
-      query = query.eq("id_vereador_destino", filtros.vereador);
-    }
-    if (filtros.tipo) {
-      query = query.eq("tipo", filtros.tipo);
-    }
-    if (filtros.status) {
-      query = query.eq("status", filtros.status);
+   if (filtros.protocolo) query = query.ilike("protocolo", `%${filtros.protocolo}%`);
+    if (filtros.vereador) query = query.eq("id_vereador_destino", filtros.vereador);
+    if (filtros.tipo) query = query.eq("tipo", filtros.tipo);
+    if (filtros.status) query = query.eq("status", filtros.status);
+
+    if (filtros.dataInicial && filtros.dataFinal) {
+      query = query.gte("created_at", filtros.dataInicial);
+      query = query.lte("created_at", filtros.dataFinal);
     }
 
-    if (filtros.data) {
-      const dataLocalInicio = new Date(`${filtros.data}T00:00:00`);
-      const dataLocalFim = new Date(`${filtros.data}T23:59:59.999`);
+    if (filtros.mensagem) query = query.ilike("descricao", `%${filtros.mensagem}%`);
 
-      query = query
-        .gte("created_at", dataLocalInicio.toISOString())
-        .lte("created_at", dataLocalFim.toISOString());
-    }
+    query = query.order("created_at", { ascending: false }).range(offsetAtual, offsetAtual + limite - 1);
 
-    query = query
-      .order("created_at", { ascending: false })
-      .range(offsetAtual, offsetAtual + limite - 1);
+    try {
+      const { data, count, error } = await query;
 
-    const { data, count, error } = await query;
-
-    if (error) {
-      console.error("Erro ao carregar manifestações:", error);
+      if (error) {
+        console.error("Erro ao carregar manifestações:", error);
+        setManifestacoes([]);
+        setTotal(0);
+      } else {
+        setManifestacoes(data || []);
+        setTotal(count || 0);
+      }
+    } catch (err) {
+      console.error("Erro inesperado:", err);
       setManifestacoes([]);
       setTotal(0);
-    } else {
-      setManifestacoes(data || []);
-      setTotal(count || 0);
+    } finally {
+      setCarregando(false);
     }
-
-    setCarregando(false);
   };
 
   useEffect(() => {
@@ -94,10 +88,8 @@ const Dashboard = () => {
     <ProtecaoAdmin>
       <div className="min-h-screen flex flex-col bg-gray-100">
         <Navbar />
-
         <main className="flex-1 p-6">
-          <h1 className="text-2xl font-semibold mb-4">Painel do Administrador</h1>
-
+          
           <BuscaRelatorio
             filtrar={(filtros) => {
               setOffset(0);
@@ -112,15 +104,15 @@ const Dashboard = () => {
           ) : manifestacoes.length === 0 ? (
             <p className="text-center mt-4 text-gray-700">
               {filtroAtivo
-                ? "Nenhum resultado encontrado para os filtros selecionados."
-                : "Nenhuma manifestação cadastrada no sistema."}
+                ? "Nenhum resultado encontrado."
+                : "Ainda não tem manifestação cadastrada."}
             </p>
           ) : (
             <>
               <div className="overflow-x-auto">
                 <table className="w-full border border-gray-300 text-sm">
                   <thead className="bg-gray-50">
-                    <tr>
+                    <tr className="bg-gray-200">
                       <th className="px-2 py-1 border">Protocolo</th>
                       <th className="px-2 py-1 border">Nome</th>
                       <th className="px-2 py-1 border">Tipo</th>
@@ -143,31 +135,17 @@ const Dashboard = () => {
                             : "bg-gray-200"
                         }`}
                       >
-                        <td className="px-2 py-1 border font-mono">
-                          {m.protocolo}
-                        </td>
-                        <td className="px-2 py-1 border">
-                          {m.is_anonimo
-                            ? "Anônimo"
-                            : m.solicitante_nome || "Anônimo"}
-                        </td>
+                        <td className="px-2 py-1 border font-mono">{m.protocolo}</td>
+                        <td className="px-2 py-1 border">{m.is_anonimo ? "Anônimo" : m.solicitante_nome || "Anônimo"}</td>
                         <td className="px-2 py-1 border">{m.tipo}</td>
-                        <td className="px-2 py-1 border">
-                          {m.vereadores?.nome_completo || "N/D"}
-                        </td>
+                        <td className="px-2 py-1 border">{m.vereadores?.nome_completo || "N/D"}</td>
                         <td className="px-2 py-1 border">{m.status}</td>
-                        <td className="px-2 py-1 border truncate max-w-xs">
-                          {m.descricao}
-                        </td>
-                        <td className="px-2 py-1 border">
-                          {new Date(m.created_at).toLocaleString("pt-BR")}
-                        </td>
+                        <td className="px-2 py-1 border truncate max-w-xs">{m.descricao}</td>
+                        <td className="px-2 py-1 border">{new Date(m.created_at).toLocaleString("pt-BR")}</td>
                         <td className="px-2 py-1 border text-center">
                           <button
                             className="text-blue-600 underline text-sm"
-                            onClick={() =>
-                              navigate(`/admin/manifestacao/${m.protocolo}`)
-                            }
+                            onClick={() => navigate(`/admin/manifestacao/${m.protocolo}`)}
                           >
                             Ver Detalhes
                           </button>
@@ -178,12 +156,7 @@ const Dashboard = () => {
                 </table>
               </div>
 
-              <Paginacao
-                limite={limite}
-                total={total}
-                offset={offset}
-                setOffset={setOffset}
-              />
+              <Paginacao limite={limite} total={total} offset={offset} setOffset={setOffset} />
             </>
           )}
         </main>
@@ -192,4 +165,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default AreaAdmin;
