@@ -1,0 +1,17 @@
+[33md906492[m[33m ([m[1;36mHEAD[m[33m, [m[1;31morigin/Develop[m[33m, [m[1;32mDevelop[m[33m)[m HEAD@{0}: rebase (start): checkout origin/develop
+[33mb45526b[m[33m ([m[1;32mfeature/verDetalhes[m[33m)[m HEAD@{1}: commit: arrumei dashboard e ver detalhes
+[33m87ad19e[m[33m ([m[1;31morigin/feature/areaAdmin[m[33m, [m[1;32mfeature/areaAdmin[m[33m)[m HEAD@{2}: checkout: moving from feature/areaAdmin to feature/verDetalhes
+[33m87ad19e[m[33m ([m[1;31morigin/feature/areaAdmin[m[33m, [m[1;32mfeature/areaAdmin[m[33m)[m HEAD@{3}: commit: Subindo areaAdmin
+[33mb8995bc[m[33m ([m[1;31morigin/feature/autenticacao[m[33m, [m[1;32mfeature/autenticacao[m[33m)[m HEAD@{4}: checkout: moving from feature/autenticacao to feature/areaAdmin
+[33mb8995bc[m[33m ([m[1;31morigin/feature/autenticacao[m[33m, [m[1;32mfeature/autenticacao[m[33m)[m HEAD@{5}: commit: Resolvendo problemas de autenticação
+[33m552f4b8[m[33m ([m[1;31morigin/integracao-lucas-parteAdmin[m[33m, [m[1;32mintegracao-lucas-parteAdmin[m[33m)[m HEAD@{6}: checkout: moving from integracao-lucas-parteAdmin to feature/autenticacao
+[33m552f4b8[m[33m ([m[1;31morigin/integracao-lucas-parteAdmin[m[33m, [m[1;32mintegracao-lucas-parteAdmin[m[33m)[m HEAD@{7}: commit (merge): Merge
+[33mf9d4366[m[33m ([m[1;31morigin/lucas[m[33m, [m[1;32mlucas[m[33m)[m HEAD@{8}: checkout: moving from lucas to integracao-lucas-parteAdmin
+[33mf9d4366[m[33m ([m[1;31morigin/lucas[m[33m, [m[1;32mlucas[m[33m)[m HEAD@{9}: checkout: moving from lucas to lucas
+[33mf9d4366[m[33m ([m[1;31morigin/lucas[m[33m, [m[1;32mlucas[m[33m)[m HEAD@{10}: checkout: moving from feature/parteAdmin to lucas
+[33ma190231[m[33m ([m[1;31morigin/feature/parteAdmin[m[33m, [m[1;32mfeature/parteAdmin[m[33m)[m HEAD@{11}: commit: Adicionando tela do administrador
+[33md906492[m[33m ([m[1;36mHEAD[m[33m, [m[1;31morigin/Develop[m[33m, [m[1;32mDevelop[m[33m)[m HEAD@{12}: checkout: moving from Develop to feature/parteAdmin
+[33md906492[m[33m ([m[1;36mHEAD[m[33m, [m[1;31morigin/Develop[m[33m, [m[1;32mDevelop[m[33m)[m HEAD@{13}: checkout: moving from Develop to Develop
+[33md906492[m[33m ([m[1;36mHEAD[m[33m, [m[1;31morigin/Develop[m[33m, [m[1;32mDevelop[m[33m)[m HEAD@{14}: commit: Adicionando tela de login para o admin
+[33m89e3384[m[33m ([m[1;32mmaster[m[33m)[m HEAD@{15}: checkout: moving from master to Develop
+[33m89e3384[m[33m ([m[1;32mmaster[m[33m)[m HEAD@{16}: commit (initial): salvando projeto area cidadão

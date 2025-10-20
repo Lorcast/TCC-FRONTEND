@@ -34,6 +34,7 @@ const DenunciaForm = () => {
       const { data, error } = await supabase
         .from('vereadores')
         .select('id, nome_completo')
+        .eq('situacao', 'Ativo')
         .order('nome_completo', { ascending: true }); // Ordena por nome
 
       if (error) {

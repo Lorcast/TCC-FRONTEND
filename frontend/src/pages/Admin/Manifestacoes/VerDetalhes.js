@@ -12,50 +12,37 @@ const VerDetalhes = () => {
   const [enviando, setEnviando] = useState(false);
   const [mensagem, setMensagem] = useState("");
   const [respostaVazia, setRespostaVazia] = useState(false);
-  
 
   const { protocolo } = useParams();
   const respostaRef = useRef(null);
   const navigate = useNavigate();
 
- 
-    const fetchManifestacao = async () => {
-      setCarregando(true);
-      try {
-        // Busca manifestação com id_vereador incluso
-        const { data, error } = await supabase
+  const fetchManifestacao = async () => {
+    setCarregando(true);
+    try {
+      const { data, error } = await supabase
+        .from("solicitacoes")
+        .select(`tipo, solicitante_nome, protocolo, created_at, status,descricao, resposta_admin, id_vereador_destino, anexos ( caminho_arquivo, nome_original )
+        `
+        )
+        .eq("protocolo", protocolo)
+        .single();
+
+      if (error) throw error;
+
+      if (data.status === "Pendente") {
+        await supabase
           .from("solicitacoes")
-          .select(`
-            tipo,
-            solicitante_nome,
-            protocolo,
-            created_at,
-            status,
-            descricao,
-            resposta_admin,
-            id_vereador_destino,
-            anexos ( caminho_arquivo, nome_original )
-          `)
-          .eq("protocolo", protocolo)
-          .single();
+          .update({ status: "Em análise" })
+          .eq("protocolo", protocolo);
 
-        if (error) throw error;
+        data.status = "Em análise";
+      }
 
-        // Se status pendente, atualiza para em análise
-        if (data.status === "Pendente") {
-          await supabase
-            .from("solicitacoes")
-            .update({ status: "Em análise" })
-            .eq("protocolo", protocolo);
+      setManifestacao(data);
+      setRespostaAdmin(data.resposta_admin || "");
 
-          data.status = "Em análise";
-        }
-
-        setManifestacao(data);
-        setRespostaAdmin(data.resposta_admin || "");
-
-        // Busca nome do vereador pelo id_vereador
-        if (data.id_vereador_destino) {
+      if (data.id_vereador_destino) {
         const { data: vereadorData } = await supabase
           .from("vereadores")
           .select("nome_completo")
@@ -76,7 +63,7 @@ const VerDetalhes = () => {
 
   const enviarResposta = async () => {
     if (!respostaAdmin.trim()) {
-      setMensagem(" escreva uma resposta antes de enviar.");
+      setMensagem("Escreva uma resposta.");
       setRespostaVazia(true);
       respostaRef.current?.scrollIntoView({ behavior: "smooth" });
       return;
@@ -87,16 +74,12 @@ const VerDetalhes = () => {
     setEnviando(true);
 
     try {
-
-            
       const { error } = await supabase
         .from("solicitacoes")
-        .update({ resposta_admin: respostaAdmin, status: "" })
+        .update({ resposta_admin: respostaAdmin, status: "Finalizado" })
         .eq("protocolo", protocolo);
 
       if (error) throw error;
-
-      
 
       setManifestacao((prev) => ({
         ...prev,
@@ -121,51 +104,69 @@ const VerDetalhes = () => {
         <GoArrowLeft />
       </button>
       {carregando ? (
-        <p className="text-center mt-4 text-gray-700">Carregando manifestação...</p>
+        <p className="text-center mt-4 text-gray-700">
+          Carregando...
+        </p>
       ) : error ? (
         <p className="text-center mt-4 text-red-600">Erro: {error}</p>
       ) : !manifestacao ? (
-        <p className="text-center mt-4 text-gray-700">Manifestação não encontrada.</p>
+        <p className="text-center mt-4 text-gray-700">
+          Manifestação não encontrada.
+        </p>
       ) : (
         <div className="max-w-3xl mx-auto bg-white shadow-md rounded-lg p-6">
-          <h2 className="text-2xl font-bold mb-4 text-gray-800">Detalhes da Manifestação</h2>
+          <h2 className="text-2xl font-bold mb-4 text-gray-800">
+            Detalhes da Manifestação
+          </h2>
 
           <div className="space-y-2">
-            <p><strong>Protocolo:</strong> {manifestacao.protocolo}</p>
-            <p><strong>Registrado em:</strong> {new Date(manifestacao.created_at).toLocaleString("pt-BR")}</p>
-            <p><strong>Status:</strong> {manifestacao.status}</p>
-            <p><strong>Tipo:</strong> {manifestacao.tipo}</p>
-            <p><strong>Vereador:</strong> {vereadorNome}</p>
-            <p><strong>Descrição:</strong> {manifestacao.descricao}</p>
+            <p>
+              <strong>Protocolo:</strong> {manifestacao.protocolo}
+            </p>
+            <p>
+              <strong>Registrado em:</strong>{" "}
+              {new Date(manifestacao.created_at).toLocaleString("pt-BR")}
+            </p>
+            <p>
+              <strong>Status:</strong> {manifestacao.status}
+            </p>
+            <p>
+              <strong>Tipo:</strong> {manifestacao.tipo}
+            </p>
+            <p>
+              <strong>Vereador:</strong> {vereadorNome}
+            </p>
+            <p>
+              <strong>Descrição:</strong> {manifestacao.descricao}
+            </p>
           </div>
 
-
-<div>
-          <h3 className="mt-6 text-xl font-semibold text-gray-700">Anexos</h3>
-          {manifestacao.anexos?.length > 0 ? (
-            <ul className="list-disc list-inside mt-2 space-y-1">
-              {manifestacao.anexos.map((anexo, index) => (
-                <li key={index}>
-                  <a
-                    href={anexo.caminho_arquivo}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 underline hover:text-blue-800 transition-colors"
-                  >
-                    {anexo.nome_original}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="mt-2 text-gray-500">Sem anexos.</p>
-          )}
-
-</div>
-          
+          <div>
+            <h3 className="mt-6 text-xl font-semibold text-gray-700">Anexos</h3>
+            {manifestacao.anexos?.length > 0 ? (
+              <ul className="list-disc list-inside mt-2 space-y-1">
+                {manifestacao.anexos.map((anexo, index) => (
+                  <li key={index}>
+                    <a
+                      href={`https://lnktsgglrgheqtqtdkma.supabase.co/storage/v1/object/public/anexos-ouvidoria/${anexo.caminho_arquivo}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 underline hover:text-blue-800 transition-colors"
+                    >
+                      {anexo.nome_original}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-2 text-gray-500">Sem anexos.</p>
+            )}
+          </div>
 
           <div className="mt-6">
-            <label className="block font-semibold mb-2 text-gray-700">Resposta do Admin</label>
+            <label className="block font-semibold mb-2 text-gray-700">
+              Resposta do Admin
+            </label>
             <textarea
               ref={respostaRef}
               className={`w-full border rounded p-2 ${
@@ -174,48 +175,43 @@ const VerDetalhes = () => {
               rows={5}
               value={respostaAdmin}
               onChange={(e) => setRespostaAdmin(e.target.value)}
-    disabled={!!manifestacao?.resposta_admin} // <-- bloqueia se já houver resposta
-  />
-
-  {manifestacao?.resposta_admin && (
-  <div className="pt-2">
-    <p>
-      <strong>Respondido em:</strong>{" "}
-          </p>
-
-          
-  </div>
-)}
+              disabled={!!manifestacao?.resposta_admin}
+            />
           </div>
 
-          <div className="mt-6 flex flex-col sm:flex-row justify-center items-center  gap-4">
+          <div className="mt-6 flex flex-col sm:flex-row justify-center items-center gap-4">
             <button
-  onClick={enviarResposta}
-  disabled={enviando || !!manifestacao?.resposta_admin || !respostaAdmin.trim()}
-  className={`text-white font-semibold px-6 py-2 rounded-md shadow transition w-full sm:w-auto disabled:opacity-50 disabled:cursor-wait ${
-    enviando || !!manifestacao?.resposta_admin || !respostaAdmin.trim()
-      ? "bg-gray-400 cursor-not-allowed"
-      : "bg-green-600 hover:bg-green-700"
-  }`}
->
-  {enviando ? "Enviando..." : "Enviar"}
-</button>
-            <button className="bg-blue-700 text-white font-semibold px-6 py-2 rounded-md shadow hover:bg-blue-800 transition w-full sm:w-auto disabled:opacity-50 disabled:cursor-wait">
-          Relatório
-        </button>
-          </div>
+              onClick={enviarResposta}
+              disabled={
+                enviando ||
+                !!manifestacao?.resposta_admin ||
+                !respostaAdmin.trim()
+              }
+              className={`bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded-md shadow transition w-full sm:w-auto ${
+      enviando ? "cursor-wait" : !!manifestacao?.resposta_admin ? "cursor-not-allowed" : ""
+    }`}
+            >
+              {enviando ? "Enviando..." : "Enviar"}
+            </button>
 
-           
+
+            
+            <button className="bg-blue-700 text-white font-semibold px-6 py-2 rounded-md shadow hover:bg-blue-800 transition w-full sm:w-auto">
+              Relatório
+            </button>
+          </div>
 
           {mensagem && (
-  <p
-    className={`mt-4 text-center font-semibold ${
-      mensagem === "Resposta enviada!" ? "text-green-600" : "text-red-600"
-    }`}
-  >
-    {mensagem}
-  </p>
-)}
+            <p
+              className={`mt-4 text-center font-semibold ${
+                mensagem === "Resposta enviada!"
+                  ? "text-green-600"
+                  : "text-red-600"
+              }`}
+            >
+              {mensagem}
+            </p>
+          )}
         </div>
       )}
     </div>
