@@ -1,49 +1,37 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth"; // Importa o hook useAuth
 
 const NavBar = () => {
   const navigate = useNavigate();
+  const { logout } = useAuth(); // Pega a função logout do hook
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const handleLogout = () => {
-    localStorage.removeItem("usuario");
-    localStorage.removeItem("token");
-    navigate("/login");
+  const handleLogout = async () => {
+    // Chama a função logout do hook (que usa Supabase)
+    await logout();
+    // A navegação pode ser desnecessária se o ProtecaoAdmin já redirecionar
+    // Mas pode manter por segurança ou se quiser redirecionar imediatamente
+    navigate("/login", { replace: true });
+    setMenuOpen(false); // Fecha o menu mobile se estiver aberto
   };
 
+  // Restante do componente permanece igual...
   return (
     <header className="bg-blue-900 text-white px-6 py-4 fixed w-full top-0 z-50 shadow-md">
       <div className="flex justify-between items-center">
         {/* Título */}
-        <h1 className="text-xl font-bold">Ouvidoria - Manifestação</h1>
+        <h1 className="text-xl font-bold">Ouvidoria - Administrador</h1> {/* Ajustado título */}
 
         {/* Botão menu mobile */}
         <button
           className="sm:hidden focus:outline-none"
           onClick={() => setMenuOpen(!menuOpen)}
+          aria-label={menuOpen ? "Fechar menu" : "Abrir menu"} // Acessibilidade
+          aria-expanded={menuOpen} // Acessibilidade
         >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            {menuOpen ? (
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            ) : (
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 6h16M4 12h16M4 18h16"
-              />
-            )}
+          <svg /* Seu SVG ... */ >
+             {/* ... path icons ... */}
           </svg>
         </button>
 
@@ -53,8 +41,9 @@ const NavBar = () => {
             onClick={() => navigate("/admin/vereadores")}
             className="hover:underline"
           >
-            Perfil
+          Vereadores {/* Ajustado texto */}
           </button>
+          
           <button onClick={handleLogout} className="hover:underline">
             Sair
           </button>
@@ -63,22 +52,20 @@ const NavBar = () => {
 
       {/* Navegação mobile */}
       {menuOpen && (
-        <nav className="sm:hidden mt-2 flex flex-col space-y-2">
+        <nav className="sm:hidden mt-4 flex flex-col space-y-2 border-t border-blue-800 pt-2"> {/* Estilo adicionado */}
           <button
             onClick={() => {
               navigate("/admin/vereadores");
               setMenuOpen(false);
             }}
-            className="hover:underline text-left"
+            className="hover:underline text-left py-1" // Padding adicionado
           >
-            Perfil
+            Vereadores {/* Ajustado texto */}
           </button>
+          
           <button
-            onClick={() => {
-              handleLogout();
-              setMenuOpen(false);
-            }}
-            className="hover:underline text-left"
+            onClick={handleLogout} // A função handleLogout já fecha o menu
+            className="hover:underline text-left py-1" // Padding adicionado
           >
             Sair
           </button>

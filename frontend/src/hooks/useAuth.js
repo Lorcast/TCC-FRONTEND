@@ -1,65 +1,100 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '../supabaseClient'; // Importa o cliente Supabase
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); // Mantém o estado de loading
   const [authError, setAuthError] = useState(null);
-  const [isInitializing, setIsInitializing] = useState(true);
+  const [isInitializing, setIsInitializing] = useState(true); // Mantém a inicialização
 
+  // Verifica a sessão ao carregar
   useEffect(() => {
-    const storedUser = localStorage.getItem("usuario");
-    const token = localStorage.getItem("token");
+    const checkSession = async () => {
+      setIsInitializing(true);
+      const { data: { session }, error } = await supabase.auth.getSession();
 
-    if (storedUser && token) {
-      // Verificar se o token é válido (isso pode envolver um request ao servidor)
-      // Aqui você pode validar o token se precisar
-      setUser(JSON.parse(storedUser));
-    }
-    setIsInitializing(false);
+      if (error) {
+        console.error("Erro ao pegar sessão:", error);
+        setAuthError("Erro ao verificar a sessão.");
+      } else {
+        setUser(session?.user ?? null); // Define o usuário se houver sessão
+      }
+      setIsInitializing(false);
+    };
+
+    checkSession();
+
+    // Ouve mudanças no estado de autenticação (login, logout)
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setUser(session?.user ?? null);
+        setLoading(false); // Garante que o loading para após o evento (login bem sucedido)
+      }
+    );
+
+    // Limpa o listener ao desmontar o componente
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
   }, []);
 
+  // Função de login com Supabase
   const login = async (email, senha) => {
-    setLoading(true);
+    setLoading(true); // Inicia o loading
     setAuthError(null);
-
     try {
-      const res = await fetch(`http://localhost:3001/usuarios?email=${email}`);
-      const data = await res.json();
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: senha,
+      });
 
-      if (data.length === 0 || data[0].senha !== senha) {
-        throw new Error("E-mail ou senha inválidos.");
+      if (error) {
+        // Trata erros específicos do Supabase Auth se necessário
+        if (error.message.includes("Invalid login credentials")) {
+          throw new Error("E-mail ou senha inválidos.");
+        }
+        throw error; // Lança outros erros
       }
 
-      const usuario = data[0];
-      setUser(usuario);
-      localStorage.setItem("usuario", JSON.stringify(usuario));
+      // O listener onAuthStateChange deve cuidar da atualização do usuário,
+      // mas retornamos o usuário para a lógica do handleSubmit se necessário.
+      return data.user;
 
-      const fakeToken = btoa(`${usuario.email}:${new Date().getTime()}`);
-      localStorage.setItem("token", fakeToken);
-
-      return usuario;
     } catch (error) {
-      setAuthError(error.message);
+      console.error("Erro no login:", error);
+      setAuthError(error.message || "Ocorreu um erro ao tentar fazer login.");
+      setUser(null);
+      // setLoading(false); // <<<< CORREÇÃO: Resetar loading em caso de erro
       return null;
     } finally {
-      setLoading(false);
+       // CORREÇÃO: Garante que o loading sempre termina, mesmo com erro ou sucesso
+       setLoading(false);
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem("usuario");
-    localStorage.removeItem("token");
-    window.location.reload(); // Força recarregar para atualizar o estado na UI
+  // Função de logout com Supabase
+  const logout = async () => {
+    setLoading(true); // Pode adicionar loading aqui se desejar
+    setAuthError(null);
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error("Erro no logout:", error);
+      setAuthError("Erro ao sair.");
+    }
+    // O listener onAuthStateChange vai limpar o 'user'
+    // Limpa o localStorage se ainda estiver usando para outros fins (talvez não precise mais)
+    localStorage.removeItem("usuario"); // Pode remover se não usar mais
+    localStorage.removeItem("token");   // Pode remover se não usar mais
+    setLoading(false); // Para o loading aqui
   };
 
   return (
     <AuthContext.Provider
       value={{ user, login, logout, loading, authError, isInitializing }}
     >
-      {children}
+      {!isInitializing && children} {/* Renderiza children apenas após inicializar */}
     </AuthContext.Provider>
   );
 };
