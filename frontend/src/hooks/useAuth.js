@@ -1,3 +1,4 @@
+// src/hooks/useAuth.js
 import { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient'; // Importa o cliente Supabase
 

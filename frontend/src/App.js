@@ -1,7 +1,7 @@
+// src/App.js
 import './App.css';
 
 //Router
-// Removido Navigate e Router que não estavam sendo usados
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
 //pages
@@ -25,7 +25,6 @@ function App() {
         {/* Rotas protegidas */}
         <Route path='admin' element={<ProtecaoAdmin> <AreaAdmin /> </ProtecaoAdmin>} />
         <Route path='admin/manifestacao/:protocolo' element={<ProtecaoAdmin> <VerDetalhes /> </ProtecaoAdmin>} />
-        {/* As rotas de vereadores também precisam estar dentro de ProtecaoAdmin? Se sim, ajuste como abaixo */}
         <Route path='admin/vereadores' element={<ProtecaoAdmin> <PerfiVereadores /> </ProtecaoAdmin>} />
         <Route path='admin/vereadores/cadastro' element={<ProtecaoAdmin> <CadastrarVereadores /> </ProtecaoAdmin>} />
         <Route path="/admin/vereadores/cadastro/:id" element={<ProtecaoAdmin> <CadastrarVereadores /> </ProtecaoAdmin>} />

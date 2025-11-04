@@ -1,3 +1,4 @@
+// src/pages/Admin/Vereadores/PerfilVereadores.js
 import { useState, useEffect, useCallback } from "react"; // Adicionado useCallback
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../../supabaseClient";

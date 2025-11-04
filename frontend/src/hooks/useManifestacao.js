@@ -1,3 +1,4 @@
+// src/hooks/useManifestacao.js
 import { useState, useEffect } from "react";
 
 export const useManifestacao = (url) => {

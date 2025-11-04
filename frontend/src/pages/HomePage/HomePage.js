@@ -1,3 +1,4 @@
+// src/pages/HomePage/HomePage.js
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom'; // useNavigate importado corretamente
 import { useAuth } from '../../hooks/useAuth'; // useAuth importado corretamente

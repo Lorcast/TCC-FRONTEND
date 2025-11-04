@@ -1,3 +1,4 @@
+// src/pages/Admin/Dashboard/AreaAdmin.js
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../../supabaseClient";
