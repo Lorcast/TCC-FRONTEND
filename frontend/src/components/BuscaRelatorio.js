@@ -12,7 +12,7 @@ const BuscaRelatorio = ({ filtrar }) => {
   const [status, setStatus] = useState("");
   const [dataInicial, setDataInicial] = useState("");
   const [dataFinal, setDataFinal] = useState("");
-  const [mensagem, setMensagem] = useState("");
+  const [assunto, setAssunto] = useState("");
   
   // Novos estados para controle do PDF
   const [isGerandoPDF, setIsGerandoPDF] = useState(false);
@@ -27,7 +27,8 @@ const BuscaRelatorio = ({ filtrar }) => {
       // Busca vereadores
       const { data: vereadoresData } = await supabase
         .from("vereadores")
-        .select("id, nome_completo")
+        .select("id, nome_completo, situacao")
+        .eq("situacao", "Ativo")
         .order("nome_completo");
       setVereadoresOpcoes(vereadoresData || []);
 
@@ -47,7 +48,7 @@ const BuscaRelatorio = ({ filtrar }) => {
   const aplicarFiltros = () => {
     setMensagemFeedback(""); // Limpa feedback ao buscar
     // LINHA CORRIGIDA: Removi o caractere inválido (non-breaking space)
-    filtrar({ protocolo, vereador, tipo, status, dataInicial, dataFinal, mensagem });
+    filtrar({ protocolo, vereador, tipo, status, dataInicial, dataFinal, assunto});
   };
 
   // 3. Função principal para gerar o PDF
@@ -80,7 +81,7 @@ const BuscaRelatorio = ({ filtrar }) => {
         query = query.gte("created_at", dataInicial);
         query = query.lte("created_at", dataFinal);
       }
-      if (mensagem) query = query.ilike("descricao", `%${mensagem}%`);
+     if (assunto) query = query.ilike("assunto", `%${assunto}%`);
 
       // Ordenar, mas SEM paginar (.range())
       query = query.order("created_at", { ascending: false });
@@ -227,9 +228,9 @@ const BuscaRelatorio = ({ filtrar }) => {
         />
         <input
           type="text"
-          placeholder="Mensagem"
-          value={mensagem}
-          onChange={(e) => setMensagem(e.target.value)}
+          placeholder="Assunto"
+          value={assunto}
+          onChange={(e) => setAssunto(e.target.value)}
           className="border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
         />
       </div>

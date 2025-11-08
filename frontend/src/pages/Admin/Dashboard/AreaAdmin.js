@@ -1,4 +1,3 @@
-// src/pages/Admin/Dashboard/AreaAdmin.js
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../../supabaseClient";
@@ -36,6 +35,7 @@ const AreaAdmin = () => {
         id,
         protocolo,
         solicitante_nome,
+        is_anonimo,
         tipo,
         created_at,
         status,
@@ -47,8 +47,10 @@ const AreaAdmin = () => {
         { count: "exact" }
       );
 
-   if (filtros.protocolo) query = query.ilike("protocolo", `%${filtros.protocolo}%`);
-    if (filtros.vereador) query = query.eq("id_vereador_destino", filtros.vereador);
+    if (filtros.protocolo)
+      query = query.ilike("protocolo", `%${filtros.protocolo}%`);
+    if (filtros.vereador)
+      query = query.eq("id_vereador_destino", filtros.vereador);
     if (filtros.tipo) query = query.eq("tipo", filtros.tipo);
     if (filtros.status) query = query.eq("status", filtros.status);
 
@@ -57,9 +59,12 @@ const AreaAdmin = () => {
       query = query.lte("created_at", filtros.dataFinal);
     }
 
-    if (filtros.mensagem) query = query.ilike("descricao", `%${filtros.mensagem}%`);
+    if (filtros.mensagem)
+      query = query.ilike("descricao", `%${filtros.mensagem}%`);
 
-    query = query.order("created_at", { ascending: false }).range(offsetAtual, offsetAtual + limite - 1);
+    query = query
+      .order("created_at", { ascending: false })
+      .range(offsetAtual, offsetAtual + limite - 1);
 
     try {
       const { data, count, error } = await query;
@@ -90,7 +95,6 @@ const AreaAdmin = () => {
       <div className="min-h-screen flex flex-col bg-gray-100">
         <Navbar />
         <main className="flex-1 p-6">
-          
           <BuscaRelatorio
             filtrar={(filtros) => {
               setOffset(0);
@@ -137,16 +141,26 @@ const AreaAdmin = () => {
                         }`}
                       >
                         <td className="px-2 py-1 border font-mono">{m.protocolo}</td>
-                        <td className="px-2 py-1 border">{m.is_anonimo ? "Anônimo" : m.solicitante_nome || "Anônimo"}</td>
+                        <td className="px-2 py-1 border">
+                          {m.is_anonimo
+                            ? "Anônimo"
+                            : m.solicitante_nome || "Anônimo"}
+                        </td>
                         <td className="px-2 py-1 border">{m.tipo}</td>
-                        <td className="px-2 py-1 border">{m.vereadores?.nome_completo || "N/D"}</td>
+                        <td className="px-2 py-1 border">
+                          {m.vereadores?.nome_completo || "N/D"}
+                        </td>
                         <td className="px-2 py-1 border">{m.status}</td>
                         <td className="px-2 py-1 border truncate max-w-xs">{m.descricao}</td>
-                        <td className="px-2 py-1 border">{new Date(m.created_at).toLocaleString("pt-BR")}</td>
+                        <td className="px-2 py-1 border">
+                          {new Date(m.created_at).toLocaleString("pt-BR")}
+                        </td>
                         <td className="px-2 py-1 border text-center">
                           <button
                             className="text-blue-600 underline text-sm"
-                            onClick={() => navigate(`/admin/manifestacao/${m.protocolo}`)}
+                            onClick={() =>
+                              navigate(`/admin/manifestacao/${m.protocolo}`)
+                            }
                           >
                             Ver Detalhes
                           </button>
@@ -157,7 +171,12 @@ const AreaAdmin = () => {
                 </table>
               </div>
 
-              <Paginacao limite={limite} total={total} offset={offset} setOffset={setOffset} />
+              <Paginacao
+                limite={limite}
+                total={total}
+                offset={offset}
+                setOffset={setOffset}
+              />
             </>
           )}
         </main>

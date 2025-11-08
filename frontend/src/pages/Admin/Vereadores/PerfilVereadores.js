@@ -81,15 +81,14 @@ const PerfilVereadores = () => {
         <NavBar /> {/* Adiciona o NavBar */}
         <main className="flex-1 p-6 pt-20"> {/* Adiciona padding-top para não ficar sob o NavBar */}
 
-        {/* Botão Voltar (ajustado para contexto do NavBar) */}
-        {/*
         <button
-          onClick={() => navigate(-1)}
-          className="absolute left-4 top-1 text-gray-600 hover:text-blue-700 cursor-pointer text-2xl"
-        >
-          <GoArrowLeft />
-        </button>
-        */}
+        type="button"
+        onClick={() => navigate(-1)}
+        className="text-gray-600 hover:text-blue-700 cursor-pointer text-2xl w-fit mb-4"
+        aria-label="Voltar"
+      >
+        <GoArrowLeft />
+      </button>
 
         {/* Filtros */}
         <div className="bg-white shadow-md rounded-lg p-6 mb-6"> {/* Ajustado margin */}
@@ -118,15 +117,7 @@ const PerfilVereadores = () => {
             >
               Buscar
             </button>
-             {/* Botão Limpar (Opcional) */}
-             {/*
-            <button
-              onClick={limparFiltros}
-              className="bg-gray-500 text-white font-semibold px-4 py-2 rounded-md shadow hover:bg-gray-600 transition w-full md:w-auto"
-            >
-              Limpar
-            </button>
-            */}
+            
 
           </div>
 
@@ -148,10 +139,10 @@ const PerfilVereadores = () => {
         {/* Tabela de Vereadores (só mostra se não estiver carregando e não houver erro) */}
        {!carregando && !erro && (
            <>
-              <div className="overflow-x-auto bg-white shadow-md rounded-lg">
-                <table className="w-full border-collapse text-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full border border-gray-300 text-sm">
                   <thead className="bg-gray-50">
-                    <tr className="bg-gray-200 text-left text-gray-600 uppercase tracking-wider">
+                    <tr className="bg-gray-200">
                       <th className="px-4 py-2 border-b">Nome</th>
                       <th className="px-4 py-2 border-b">Partido</th>
                       <th className="px-4 py-2 border-b">E-mail</th>

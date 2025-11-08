@@ -1,59 +1,56 @@
-// src/pages/Cidadao/DenunciaForm.js
 import React, { useState, useEffect, useCallback } from "react";
-import {  useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { GoArrowLeft } from "react-icons/go";
-import { supabase } from "../../supabaseClient"; // Importe o cliente Supabase!
+import { supabase } from "../../supabaseClient";
 
-//declaração do componente funcional React chamado DenunciaForm. Tudo dentro desse bloco é o componente.
 const DenunciaForm = () => {
-  // 3 -  Estado para o formulário
   const [formManifestacao, setFormManifestacao] = useState({
-    vereador: "", // Agora vai guardar o ID do vereador
+    vereador: "",
     tipoManifestacao: "",
     identificacao: "anonimo",
+    assunto: "",
     mensagem: "",
-    anexos: null, // Vai guardar o objeto do arquivo
+    anexos: null,
     nome: "",
     telefone: "",
   });
 
-  // Estados para controlar o fluxo da página
   const [erros, setErros] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [protocolo, setProtocolo] = useState(null);
   const [submitError, setSubmitError] = useState(null);
   const [vereadores, setVereadores] = useState([]);
 
-  //cria a função navigate para navegar pela aplicação (ex.: navigate(-1) volta à página anterior).
   const navigate = useNavigate();
 
-  // 4 --- EFEITO PARA BUSCAR VEREADORES DO SUPABASE ---
+  // --- Buscar vereadores ativos ---
   useEffect(() => {
     const fetchVereadores = async () => {
-      // Busca na tabela 'vereadores', selecionando o id e o nome_completo
       const { data, error } = await supabase
-        .from('vereadores')
-        .select('id, nome_completo')
-        .eq('situacao', 'Ativo')
-        .order('nome_completo', { ascending: true }); // Ordena por nome
+        .from("vereadores")
+        .select("id, nome_completo")
+        .eq("situacao", "Ativo")
+        .order("nome_completo", { ascending: true });
 
       if (error) {
-        console.error('Erro ao buscar vereadores:', error);
-        setSubmitError("Não foi possível carregar a lista de vereadores. Tente recarregar a página.");
+        console.error("Erro ao buscar vereadores:", error);
+        setSubmitError(
+          "Não foi possível carregar a lista de vereadores. Tente recarregar a página."
+        );
       } else {
         setVereadores(data);
       }
     };
 
     fetchVereadores();
-  }, []); // O array vazio [] faz isso rodar apenas uma vez quando o componente carrega
+  }, []);
 
-  //5 -  Funções de controle do formulário (iguais às que você já tinha)
+  // --- Controle de inputs ---
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormManifestacao((prev) => ({ ...prev, [name]: value }));
   };
-  
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     setFormManifestacao((prev) => ({ ...prev, anexos: file || null }));
@@ -64,39 +61,39 @@ const DenunciaForm = () => {
       vereador: "",
       tipoManifestacao: "",
       identificacao: "anonimo",
+      assunto: "",
       mensagem: "",
       anexos: null,
       nome: "",
       telefone: "",
     });
-    // Limpa também o campo de arquivo no DOM
-    document.getElementById('anexo-input').value = "";
+    document.getElementById("anexo-input").value = "";
   }, []);
 
-  // 6 --- FUNÇÃO DE ENVIO PARA O SUPABASE ---
+  // --- Envio para Supabase ---
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // A. Validação do formulário (sua lógica original, que é ótima!)
+
     const novosErros = {};
-    if (!formManifestacao.vereador) {
-        novosErros.vereador = "Por favor, selecione um vereador.";
-    }
-    if (!formManifestacao.tipoManifestacao) {
-        novosErros.tipoManifestacao = "Por favor, selecione um tipo de manifestação.";
-    }
-    if (!formManifestacao.mensagem.trim()) {
-        novosErros.mensagem = "Você precisa escrever algo para enviar.";
-    } else if (formManifestacao.mensagem.trim().length < 10) {
-        novosErros.mensagem = "Sua mensagem está muito curta (mínimo 10 caracteres).";
-    }
+
+    if (!formManifestacao.vereador)
+      novosErros.vereador = "Por favor, selecione um vereador.";
+    if (!formManifestacao.tipoManifestacao)
+      novosErros.tipoManifestacao =
+        "Por favor, selecione um tipo de manifestação.";
+    if (!formManifestacao.assunto.trim())
+      novosErros.assunto = "Por favor, informe o assunto.";
+    if (!formManifestacao.mensagem.trim())
+      novosErros.mensagem = "Você precisa escrever algo para enviar.";
+    else if (formManifestacao.mensagem.trim().length < 10)
+      novosErros.mensagem =
+        "Sua mensagem está muito curta (mínimo 10 caracteres).";
+
     if (formManifestacao.identificacao === "identificado") {
-        if (!formManifestacao.nome.trim()) {
-            novosErros.nome = "Informe seu nome.";
-        }
-        if (!formManifestacao.telefone.trim()) {
-            novosErros.telefone = "Informe um telefone.";
-        }
+      if (!formManifestacao.nome.trim())
+        novosErros.nome = "Informe seu nome.";
+      if (!formManifestacao.telefone.trim())
+        novosErros.telefone = "Informe um telefone.";
     }
 
     if (Object.keys(novosErros).length > 0) {
@@ -104,95 +101,97 @@ const DenunciaForm = () => {
       return;
     }
 
-    // b.Limpa os erros e inicia o estado de envio
     setErros({});
     setSubmitError(null);
     setProtocolo(null);
     setIsSubmitting(true);
 
     try {
-      // c. Upload do anexo (se existir)
+      // --- Upload do anexo ---
       let caminhoAnexo = null;
       if (formManifestacao.anexos) {
-        // A CORREÇÃO:
-const file = formManifestacao.anexos;
+        const file = formManifestacao.anexos;
+        const safeFileName = file.name
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .toLowerCase()
+          .replace(/\s+/g, "-")
+          .replace(/[^\w-.]/g, "");
+        const filePath = `public/${Date.now()}-${safeFileName}`;
 
-// d. "Limpa" o nome do arquivo para remover caracteres especiais e acentos
-const safeFileName = file.name
-  .normalize("NFD") // Separa os acentos das letras (ex: 'ç' vira 'c' e '¸')
-  .replace(/[\u0300-\u036f]/g, "") // Remove os acentos que foram separados
-  .toLowerCase() // Converte para minúsculas
-  .replace(/\s+/g, '-') // Substitui espaços por hífens
-  .replace(/[^\w-.]/g, ''); // Remove qualquer outro caractere que não seja letra, número, hífen, underscore ou ponto
+        const { error: uploadError } = await supabase.storage
+          .from("anexos-ouvidoria")
+          .upload(filePath, file);
 
-const filePath = `public/${Date.now()}-${safeFileName}`;
-
-const { error: uploadError } = await supabase.storage
-  .from('anexos-ouvidoria')
-  .upload(filePath, file); // Agora usa o caminho com o nome do arquivo limpo
-
-        if (uploadError) throw uploadError; // Se der erro no upload, para tudo
+        if (uploadError) throw uploadError;
         caminhoAnexo = filePath;
       }
 
-      // e. Preparar os dados para salvar na tabela 'solicitacoes'
+      // --- Inserção da manifestação ---
       const dadosParaSalvar = {
         id_vereador_destino: formManifestacao.vereador,
         tipo: formManifestacao.tipoManifestacao,
+        assunto: formManifestacao.assunto,
         descricao: formManifestacao.mensagem,
-        is_anonimo: formManifestacao.identificacao === 'anonimo',
-        solicitante_nome: formManifestacao.identificacao === 'identificado' ? formManifestacao.nome : null,
-        solicitante_contato: formManifestacao.identificacao === 'identificado' ? formManifestacao.telefone : null,
-        status: 'Pendente'
+        is_anonimo: formManifestacao.identificacao === "anonimo",
+        solicitante_nome:
+          formManifestacao.identificacao === "identificado"
+            ? formManifestacao.nome
+            : null,
+        solicitante_contato:
+          formManifestacao.identificacao === "identificado"
+            ? formManifestacao.telefone
+            : null,
+        status: "Pendente",
       };
 
-      // f. Inserir a manifestação e pegar o ID dela de volta
       const { data: solicitacao, error: insertError } = await supabase
-        .from('solicitacoes')
+        .from("solicitacoes")
         .insert(dadosParaSalvar)
-        .select('id')
+        .select("id")
         .single();
 
       if (insertError) throw insertError;
+
       const novoId = solicitacao.id;
 
-      //  Gerar e salvar o número de protocolo (NOVA VERSÃO)
-const hoje = new Date();
-const dia = String(hoje.getDate()).padStart(2, '0');
-const mes = String(hoje.getMonth() + 1).padStart(2, '0'); // Mês começa em 0, por isso +1
-const ano = String(hoje.getFullYear()).slice(-2); // Pega os 2 últimos dígitos do ano
+      // --- Geração de protocolo ---
+      const hoje = new Date();
+      const dia = String(hoje.getDate()).padStart(2, "0");
+      const mes = String(hoje.getMonth() + 1).padStart(2, "0");
+      const ano = String(hoje.getFullYear()).slice(-2);
+      const numeroProtocoloGerado = `${dia}${mes}${ano}${String(
+        novoId
+      ).padStart(6, "0")}`;
 
-const numeroProtocoloGerado = `${dia}${mes}${ano}${String(novoId).padStart(6, '0')}`;
-
-const { error: updateError } = await supabase
-  .from('solicitacoes')
+      const { error: updateError } = await supabase
+        .from("solicitacoes")
         .update({ protocolo: numeroProtocoloGerado })
-        .eq('id', novoId);
+        .eq("id", novoId);
 
       if (updateError) throw updateError;
-      
-      //  Salvar a referência do anexo na tabela 'anexos' (se houver)
+
       if (caminhoAnexo) {
-        await supabase.from('anexos').insert({
+        await supabase.from("anexos").insert({
           id_solicitacao: novoId,
           caminho_arquivo: caminhoAnexo,
-          nome_original: formManifestacao.anexos.name
+          nome_original: formManifestacao.anexos.name,
         });
       }
 
-      //  Sucesso! Exibir protocolo e limpar o formulário
       setProtocolo(numeroProtocoloGerado);
       resetForm();
-
     } catch (err) {
       console.error("Erro ao enviar manifestação:", err);
-      setSubmitError("Ocorreu um erro ao enviar sua manifestação. Por favor, tente novamente. Detalhe: " + err.message);
+      setSubmitError(
+        "Ocorreu um erro ao enviar sua manifestação. Detalhe: " + err.message
+      );
     } finally {
-      setIsSubmitting(false); // Garante que o botão seja reativado no fim
+      setIsSubmitting(false);
     }
   };
 
-  // 7 ---- RENDERIZAÇÃO DO COMPONENTE (JSX) ---
+  // --- JSX ---
   return (
     <div className="min-h-screen bg-gray-100 p-6 flex items-center justify-center">
       <form
@@ -200,9 +199,9 @@ const { error: updateError } = await supabase
         className="w-full max-w-2xl bg-white p-8 rounded-xl shadow-lg space-y-6"
         noValidate
       >
-
-        {/* Seta de Voltar */}
+        {/* 🔹 Corrigido: botão agora é type="button" */}
         <button
+          type="button"
           onClick={() => navigate(-1)}
           className="text-gray-600 hover:text-blue-700 cursor-pointer text-2xl w-fit"
         >
@@ -212,10 +211,12 @@ const { error: updateError } = await supabase
         <h2 className="text-xl font-bold text-center text-gray-700">
           Registrar Manifestação
         </h2>
-        
-        {/* Vereador (agora populado pelo Supabase) */}
+
+        {/* Vereador */}
         <div>
-          <label className="block font-medium mb-1">Vereador <span className="text-red-600">*</span></label>
+          <label className="block font-medium mb-1">
+            Vereador <span className="text-red-600">*</span>
+          </label>
           <select
             name="vereador"
             value={formManifestacao.vereador}
@@ -224,19 +225,27 @@ const { error: updateError } = await supabase
           >
             <option value="">Selecione...</option>
             {vereadores.map((v) => (
-              <option key={v.id} value={v.id}>{v.nome_completo}</option>
+              <option key={v.id} value={v.id}>
+                {v.nome_completo}
+              </option>
             ))}
           </select>
-          {erros.vereador && <p className="text-red-500 text-sm mt-1">{erros.vereador}</p>}
+          {erros.vereador && (
+            <p className="text-red-500 text-sm mt-1">{erros.vereador}</p>
+          )}
         </div>
 
-        {/* ... O resto do seu JSX (Tipo, Identificação, Nome, Telefone, Mensagem) continua o mesmo ... */}
-        {/* Você só precisa garantir que os `name` dos inputs correspondem às chaves do estado `formManifestacao` */}
-        
         {/* Tipo de manifestação */}
         <div>
-          <label className="block font-medium mb-1">Tipo de Manifestação <span className="text-red-600">*</span></label>
-          <select name="tipoManifestacao" value={formManifestacao.tipoManifestacao} onChange={handleChange} className="w-full p-2 border rounded-md">
+          <label className="block font-medium mb-1">
+            Tipo de Manifestação <span className="text-red-600">*</span>
+          </label>
+          <select
+            name="tipoManifestacao"
+            value={formManifestacao.tipoManifestacao}
+            onChange={handleChange}
+            className="w-full p-2 border rounded-md"
+          >
             <option value="">Selecione...</option>
             <option value="denuncia">Denúncia</option>
             <option value="sugestao">Sugestão</option>
@@ -244,43 +253,101 @@ const { error: updateError } = await supabase
             <option value="reclamacao">Reclamação</option>
             <option value="outros">Outros</option>
           </select>
-          {erros.tipoManifestacao && <p className="text-red-500 text-sm mt-1">{erros.tipoManifestacao}</p>}
+          {erros.tipoManifestacao && (
+            <p className="text-red-500 text-sm mt-1">
+              {erros.tipoManifestacao}
+            </p>
+          )}
         </div>
 
         {/* Identificação */}
         <div>
-            <label className="block font-medium mb-1">Identificação <span className="text-red-600">*</span></label>
-            <div className="flex gap-4">
-                {["anonimo", "identificado"].map((tipo) => (
-                    <label key={tipo} className="flex items-center gap-2">
-                        <input type="radio" name="identificacao" value={tipo} checked={formManifestacao.identificacao === tipo} onChange={handleChange} />
-                        {tipo === "anonimo" ? "Anônimo" : "Quero me identificar"}
-                    </label>
-                ))}
-            </div>
+          <label className="block font-medium mb-1">
+            Identificação <span className="text-red-600">*</span>
+          </label>
+          <div className="flex gap-4">
+            {["anonimo", "identificado"].map((tipo) => (
+              <label key={tipo} className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="identificacao"
+                  value={tipo}
+                  checked={formManifestacao.identificacao === tipo}
+                  onChange={handleChange}
+                />
+                {tipo === "anonimo" ? "Anônimo" : "Quero me identificar"}
+              </label>
+            ))}
+          </div>
         </div>
 
-        {/* Campos se identificado */}
         {formManifestacao.identificacao === "identificado" && (
-            <>
-                <div>
-                    <label className="block font-medium mb-1">Nome <span className="text-red-600">*</span></label>
-                    <input type="text" name="nome" value={formManifestacao.nome} onChange={handleChange} className="w-full p-2 border rounded-md"/>
-                    {erros.nome && <p className="text-red-500 text-sm mt-1">{erros.nome}</p>}
-                </div>
-                <div>
-                    <label className="block font-medium mb-1">Telefone <span className="text-red-600">*</span></label>
-                    <input type="tel" name="telefone" value={formManifestacao.telefone} onChange={handleChange} className="w-full p-2 border rounded-md"/>
-                    {erros.telefone && <p className="text-red-500 text-sm mt-1">{erros.telefone}</p>}
-                </div>
-            </>
+          <>
+            <div>
+              <label className="block font-medium mb-1">
+                Nome <span className="text-red-600">*</span>
+              </label>
+              <input
+                type="text"
+                name="nome"
+                value={formManifestacao.nome}
+                onChange={handleChange}
+                className="w-full p-2 border rounded-md"
+              />
+              {erros.nome && (
+                <p className="text-red-500 text-sm mt-1">{erros.nome}</p>
+              )}
+            </div>
+            <div>
+              <label className="block font-medium mb-1">
+                Telefone <span className="text-red-600">*</span>
+              </label>
+              <input
+                type="tel"
+                name="telefone"
+                value={formManifestacao.telefone}
+                onChange={handleChange}
+                className="w-full p-2 border rounded-md"
+              />
+              {erros.telefone && (
+                <p className="text-red-500 text-sm mt-1">{erros.telefone}</p>
+              )}
+            </div>
+          </>
         )}
+
+        {/* Assunto */}
+        <div>
+          <label className="block font-medium mb-1">
+            Assunto <span className="text-red-600">*</span>
+          </label>
+          <textarea
+            name="assunto"
+            rows="1"
+            value={formManifestacao.assunto}
+            onChange={handleChange}
+            className="w-full p-2 border rounded-md"
+          />
+          {erros.assunto && (
+            <p className="text-red-500 text-sm mt-1">{erros.assunto}</p>
+          )}
+        </div>
 
         {/* Mensagem */}
         <div>
-          <label className="block font-medium mb-1">Mensagem <span className="text-red-600">*</span></label>
-          <textarea name="mensagem" rows="4" value={formManifestacao.mensagem} onChange={handleChange} className="w-full p-2 border rounded-md" />
-          {erros.mensagem && <p className="text-red-500 text-sm mt-1">{erros.mensagem}</p>}
+          <label className="block font-medium mb-1">
+            Mensagem <span className="text-red-600">*</span>
+          </label>
+          <textarea
+            name="mensagem"
+            rows="4"
+            value={formManifestacao.mensagem}
+            onChange={handleChange}
+            className="w-full p-2 border rounded-md"
+          />
+          {erros.mensagem && (
+            <p className="text-red-500 text-sm mt-1">{erros.mensagem}</p>
+          )}
         </div>
 
         {/* Anexo */}
@@ -295,35 +362,34 @@ const { error: updateError } = await supabase
           />
         </div>
 
-        {/* Botão de Envio */}
+        {/* Botão de envio */}
         <div className="flex justify-center">
-
-          
-            <button
+          <button
             type="submit"
             disabled={isSubmitting}
             className="bg-blue-700 text-white font-semibold px-6 py-2 rounded-md shadow hover:bg-blue-800 transition w-full sm:w-auto disabled:opacity-50 disabled:cursor-wait"
-            >
+          >
             {isSubmitting ? "Enviando..." : "Enviar Manifestação"}
-            </button>
+          </button>
         </div>
 
-        {/* Mensagem de Sucesso (Protocolo) */}
+        {/* Mensagens de feedback */}
         {protocolo && (
-          <div className="  text-green-700 p-4 rounded-md text-center">
+          <div className="text-green-700 p-4 rounded-md text-center">
             <p className="font-bold">Manifestação enviada com sucesso!</p>
-            <p>Guarde seu número de protocolo para consulta: <strong>{protocolo}</strong></p>
+            <p>
+              Guarde seu número de protocolo:{" "}
+              <strong>{protocolo}</strong>
+            </p>
           </div>
         )}
 
-        {/* Mensagem de Erro */}
         {submitError && (
           <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md text-center">
             <p className="font-bold">Erro no Envio</p>
             <p>{submitError}</p>
           </div>
         )}
-
       </form>
     </div>
   );

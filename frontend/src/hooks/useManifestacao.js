@@ -1,18 +1,29 @@
-// src/hooks/useManifestacao.js
 import { useState, useEffect } from "react";
 
 export const useManifestacao = (url) => {
-   const [manifestacao, setManifestacao] = useState([]);
+  const [manifestacao, setManifestacao] = useState([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState(null);
 
-   useEffect(() => {
+  useEffect(() => {
+    if (!url) return; 
 
-    const res = fetch(url)
-    const data = res.json()
+    const carregarManifestacao = async () => {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Erro ao buscar dados");
 
-    setManifestacao(data);
-   }, [url]);
+        const data = await res.json();
+        setManifestacao(data);
+      } catch (error) {
+        setErro(error.message);
+      } finally {
+        setCarregando(false);
+      }
+    };
 
-   console.log(manifestacao);
+    carregarManifestacao();
+  }, [url]);
 
-  
+  return { manifestacao, carregando, erro };
 };
