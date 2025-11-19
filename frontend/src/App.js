@@ -15,6 +15,7 @@ import ProtecaoAdmin from './components/ProtecaoAdmin';
 import VerDetalhes from './pages/Admin/Manifestacoes/VerDetalhes';
 import PerfiVereadores from './pages/Admin/Vereadores/PerfilVereadores';
 import CadastrarVereadores from './pages/Admin/Vereadores/CadastrarVereadores';
+import Ouvidor from './pages/Admin/Ouvidor/Ouvidor';
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
         <Route path='admin/vereadores' element={<ProtecaoAdmin> <PerfiVereadores /> </ProtecaoAdmin>} />
         <Route path='admin/vereadores/cadastro' element={<ProtecaoAdmin> <CadastrarVereadores /> </ProtecaoAdmin>} />
         <Route path="/admin/vereadores/cadastro/:id" element={<ProtecaoAdmin> <CadastrarVereadores /> </ProtecaoAdmin>} />
+        <Route path="/admin/ouvidor" element={<ProtecaoAdmin> <Ouvidor/> </ProtecaoAdmin>} />
 
         {/* Rotas públicas */}
         <Route path="denuncia" element={<DenunciaForm />} />

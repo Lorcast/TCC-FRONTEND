@@ -13,6 +13,7 @@ const DenunciaForm = () => {
     anexos: null,
     nome: "",
     telefone: "",
+    cpf: "",
   });
 
   const [erros, setErros] = useState({});
@@ -45,9 +46,71 @@ const DenunciaForm = () => {
     fetchVereadores();
   }, []);
 
+  
+// Máscara de telefone
+  const aplicarMascaraTelefone = (valor) => {
+  return valor
+    .replace(/\D/g, "")                     // remove tudo que não é número
+    .replace(/(\d{2})(\d)/, "($1) $2")      // (00) 0
+    .replace(/(\d{5})(\d)/, "$1-$2")        // (00) 00000-000
+    .substring(0, 15);                      // limite tamanho
+};
+
+// Máscara de CPF
+const aplicarMascaraCPF = (valor) => {
+  return valor
+    .replace(/\D/g, "") // remove tudo que não for número
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d{1,2})$/, "$1-$2")
+    .substring(0, 14); // garante 000.000.000-00
+};
+
+// Validação de CPF
+const validarCPF = (cpf) => {
+  cpf = cpf.replace(/[^\d]+/g, "");
+
+  if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
+
+  let soma = 0;
+  for (let i = 0; i < 9; i++) soma += parseInt(cpf.charAt(i)) * (10 - i);
+  let resto = (soma * 10) % 11;
+  if (resto === 10 || resto === 11) resto = 0;
+  if (resto !== parseInt(cpf.charAt(9))) return false;
+
+  soma = 0;
+  for (let i = 0; i < 10; i++) soma += parseInt(cpf.charAt(i)) * (11 - i);
+  resto = (soma * 10) % 11;
+  if (resto === 10 || resto === 11) resto = 0;
+
+  return resto === parseInt(cpf.charAt(10));
+};
+    
+
+
+
+
+
+
+
+
+
   // --- Controle de inputs ---
   const handleChange = (e) => {
     const { name, value } = e.target;
+
+     if (name === "telefone") {
+    const telMascarado = aplicarMascaraTelefone(value);
+    setFormManifestacao((prev) => ({ ...prev, telefone: telMascarado }));
+    return;
+  }
+
+    if (name === "cpf") {
+    const cpfMascarado = aplicarMascaraCPF(value);
+    setFormManifestacao((prev) => ({ ...prev, cpf: cpfMascarado }));
+    return;
+  }
+
     setFormManifestacao((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -66,6 +129,8 @@ const DenunciaForm = () => {
       anexos: null,
       nome: "",
       telefone: "",
+      cpf: "",
+      
     });
     document.getElementById("anexo-input").value = "";
   }, []);
@@ -90,6 +155,10 @@ const DenunciaForm = () => {
         "Sua mensagem está muito curta (mínimo 10 caracteres).";
 
     if (formManifestacao.identificacao === "identificado") {
+      if (!formManifestacao.cpf.trim())
+    novosErros.cpf = "Informe seu CPF.";
+  else if (!validarCPF(formManifestacao.cpf))
+    novosErros.cpf = "CPF inválido.";
       if (!formManifestacao.nome.trim())
         novosErros.nome = "Informe seu nome.";
       if (!formManifestacao.telefone.trim())
@@ -142,6 +211,10 @@ const DenunciaForm = () => {
           formManifestacao.identificacao === "identificado"
             ? formManifestacao.telefone
             : null,
+            solicitante_cpf:
+    formManifestacao.identificacao === "identificado"
+      ? formManifestacao.cpf
+      : null,
         status: "Pendente",
       };
 
@@ -244,6 +317,7 @@ const DenunciaForm = () => {
             name="tipoManifestacao"
             value={formManifestacao.tipoManifestacao}
             onChange={handleChange}
+            maxLength="14"
             className="w-full p-2 border rounded-md"
           >
             <option value="">Selecione...</option>
@@ -283,6 +357,24 @@ const DenunciaForm = () => {
 
         {formManifestacao.identificacao === "identificado" && (
           <>
+
+           <div>
+              <label className="block font-medium mb-1">
+                CPF <span className="text-red-600">*</span>
+              </label>
+              <input
+                type="text"
+                name="cpf"
+                placeholder="000.000.000-00"
+                value={formManifestacao.cpf}                
+                onChange={handleChange}
+                className="w-full p-2 border rounded-md"
+              />
+              {erros.cpf && (
+    <p className="text-red-500 text-sm mt-1">{erros.cpf}</p>
+  )}
+              
+            </div>
             <div>
               <label className="block font-medium mb-1">
                 Nome <span className="text-red-600">*</span>
@@ -305,6 +397,7 @@ const DenunciaForm = () => {
               <input
                 type="tel"
                 name="telefone"
+                 placeholder="(00) 00000-0000"
                 value={formManifestacao.telefone}
                 onChange={handleChange}
                 className="w-full p-2 border rounded-md"

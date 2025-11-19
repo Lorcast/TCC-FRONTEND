@@ -13,7 +13,6 @@ const VerDetalhes = () => {
   const [vereadorNome, setVereadorNome] = useState("Não informado");
   const [enviando, setEnviando] = useState(false);
   const [mensagem, setMensagem] = useState("");
-  const [assunto, setAssunto] = useState("");
   const [respostaVazia, setRespostaVazia] = useState(false);
 
   // 2. Adicionar estado de loading para o PDF
@@ -46,6 +45,8 @@ const VerDetalhes = () => {
           resposta_admin,
           data_resposta,
           id_vereador_destino,
+          solicitante_contato,
+          solicitante_cpf,
           anexos ( caminho_arquivo, nome_original )
         `)
         .eq("protocolo", protocolo)
@@ -304,7 +305,9 @@ const VerDetalhes = () => {
             <p><strong>Status:</strong> <span className={`font-semibold px-2 py-1 rounded ${manifestacao.status === 'Pendente' ? 'bg-yellow-200 text-yellow-800' : manifestacao.status === 'Em análise' ? 'bg-blue-200 text-blue-800' : 'bg-green-200 text-green-800'}`}>{manifestacao.status}</span></p>
             <p><strong>Tipo:</strong> {manifestacao.tipo}</p>
             <p><strong>Assunto:</strong> {manifestacao.assunto}</p>
-            <p><strong>Solicitante:</strong> {manifestacao.solicitante_nome || 'Anônimo'}</p>
+             <p><strong>CPF:</strong> {manifestacao.solicitante_cpf  || "Não informado"}</p>
+             <p><strong>Solicitante:</strong> {manifestacao.solicitante_nome || 'Anônimo'}</p>
+             <p><strong>Telefone:</strong> {manifestacao.solicitante_contato || "Não informado"}</p>
             <p><strong>Vereador Destino:</strong> {vereadorNome}</p>
           </div>
 

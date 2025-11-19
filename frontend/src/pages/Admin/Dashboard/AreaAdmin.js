@@ -15,6 +15,7 @@ const AreaAdmin = () => {
   const [total, setTotal] = useState(0);
   const limite = 10;
 
+  const [filtrosAtuais, setFiltrosAtuais] = useState({});
   const navigate = useNavigate();
 
   const fetchManifestacoes = async (filtros = {}, offsetAtual = 0) => {
@@ -25,7 +26,10 @@ const AreaAdmin = () => {
       filtros.vereador ||
       filtros.tipo ||
       filtros.status ||
-      filtros.data;
+      filtros.dataInicial ||
+      filtros.dataFinal ||
+      filtros.mensagem;
+
     setFiltroAtivo(!!temFiltros);
 
     let query = supabase
@@ -47,10 +51,8 @@ const AreaAdmin = () => {
         { count: "exact" }
       );
 
-    if (filtros.protocolo)
-      query = query.ilike("protocolo", `%${filtros.protocolo}%`);
-    if (filtros.vereador)
-      query = query.eq("id_vereador_destino", filtros.vereador);
+    if (filtros.protocolo) query = query.ilike("protocolo", `%${filtros.protocolo}%`);
+    if (filtros.vereador) query = query.eq("id_vereador_destino", filtros.vereador);
     if (filtros.tipo) query = query.eq("tipo", filtros.tipo);
     if (filtros.status) query = query.eq("status", filtros.status);
 
@@ -59,58 +61,46 @@ const AreaAdmin = () => {
       query = query.lte("created_at", filtros.dataFinal);
     }
 
-    if (filtros.mensagem)
-      query = query.ilike("descricao", `%${filtros.mensagem}%`);
+    if (filtros.mensagem) query = query.ilike("descricao", `%${filtros.mensagem}%`);
 
-    query = query
-      .order("created_at", { ascending: false })
-      .range(offsetAtual, offsetAtual + limite - 1);
+    query = query.order("created_at", { ascending: false }).range(offsetAtual, offsetAtual + limite - 1);
 
-    try {
-      const { data, count, error } = await query;
+    const { data, count, error } = await query;
 
-      if (error) {
-        console.error("Erro ao carregar manifestações:", error);
-        setManifestacoes([]);
-        setTotal(0);
-      } else {
-        setManifestacoes(data || []);
-        setTotal(count || 0);
-      }
-    } catch (err) {
-      console.error("Erro inesperado:", err);
+    if (error) {
+      console.error(error);
       setManifestacoes([]);
       setTotal(0);
-    } finally {
-      setCarregando(false);
+    } else {
+      setManifestacoes(data);
+      setTotal(count);
     }
+
+    setCarregando(false);
   };
 
   useEffect(() => {
-    fetchManifestacoes({}, offset);
-  }, [offset]);
+    fetchManifestacoes(filtrosAtuais, offset);
+  }, [offset, filtrosAtuais]);
 
   return (
     <ProtecaoAdmin>
       <div className="min-h-screen flex flex-col bg-gray-100">
         <Navbar />
+
         <main className="flex-1 p-6">
           <BuscaRelatorio
             filtrar={(filtros) => {
-              setOffset(0);
-              fetchManifestacoes(filtros, 0);
+              setFiltrosAtuais(filtros);
+              setOffset(0); // reseta a paginação ao filtrar
             }}
           />
 
           {carregando ? (
-            <p className="text-center mt-4 text-gray-700">
-              Carregando manifestações...
-            </p>
+            <p className="text-center mt-4 text-gray-700">Carregando manifestações...</p>
           ) : manifestacoes.length === 0 ? (
             <p className="text-center mt-4 text-gray-700">
-              {filtroAtivo
-                ? "Nenhum resultado encontrado."
-                : "Ainda não tem manifestação cadastrada."}
+              {filtroAtivo ? "Nenhum resultado encontrado." : "Ainda não tem manifestação cadastrada."}
             </p>
           ) : (
             <>
@@ -128,6 +118,7 @@ const AreaAdmin = () => {
                       <th className="px-2 py-1 border text-center">Ações</th>
                     </tr>
                   </thead>
+
                   <tbody>
                     {manifestacoes.map((m) => (
                       <tr
@@ -141,26 +132,25 @@ const AreaAdmin = () => {
                         }`}
                       >
                         <td className="px-2 py-1 border font-mono">{m.protocolo}</td>
+
                         <td className="px-2 py-1 border">
-                          {m.is_anonimo
-                            ? "Anônimo"
-                            : m.solicitante_nome || "Anônimo"}
+                          {m.is_anonimo ? "Anônimo" : m.solicitante_nome || "Anônimo"}
                         </td>
+
                         <td className="px-2 py-1 border">{m.tipo}</td>
-                        <td className="px-2 py-1 border">
-                          {m.vereadores?.nome_completo || "N/D"}
-                        </td>
+
+                        <td className="px-2 py-1 border">{m.vereadores?.nome_completo || "N/D"}</td>
+
                         <td className="px-2 py-1 border">{m.status}</td>
+
                         <td className="px-2 py-1 border truncate max-w-xs">{m.descricao}</td>
-                        <td className="px-2 py-1 border">
-                          {new Date(m.created_at).toLocaleString("pt-BR")}
-                        </td>
+
+                        <td className="px-2 py-1 border">{new Date(m.created_at).toLocaleString("pt-BR")}</td>
+
                         <td className="px-2 py-1 border text-center">
                           <button
                             className="text-blue-600 underline text-sm"
-                            onClick={() =>
-                              navigate(`/admin/manifestacao/${m.protocolo}`)
-                            }
+                            onClick={() => navigate(`/admin/manifestacao/${m.protocolo}`)}
                           >
                             Ver Detalhes
                           </button>
@@ -171,12 +161,7 @@ const AreaAdmin = () => {
                 </table>
               </div>
 
-              <Paginacao
-                limite={limite}
-                total={total}
-                offset={offset}
-                setOffset={setOffset}
-              />
+              <Paginacao limite={limite} total={total} offset={offset} setOffset={setOffset} />
             </>
           )}
         </main>

@@ -37,40 +37,61 @@ const NavBar = () => {
         </button>
 
         {/* Navegação desktop */}
+
         <nav className="hidden sm:flex space-x-6">
-          <button
-            onClick={() => navigate("/admin/vereadores")}
-            className="hover:underline"
-          >
-          Vereadores {/* Ajustado texto */}
-          </button>
-          
-          <button onClick={handleLogout} className="hover:underline">
-            Sair
-          </button>
-        </nav>
+      <button
+        onClick={() => navigate("/admin/vereadores")}
+        className="hover:underline"
+      >
+        Vereadores
+      </button>
+
+      <button
+        onClick={() => navigate("/admin/ouvidor")}
+        className="hover:underline"
+      >
+        Ouvidor
+      </button>
+
+      <button
+        onClick={handleLogout}
+        className="hover:underline"
+      >
+        Sair
+      </button>
+    </nav>
       </div>
 
       {/* Navegação mobile */}
       {menuOpen && (
-        <nav className="sm:hidden mt-4 flex flex-col space-y-2 border-t border-blue-800 pt-2"> {/* Estilo adicionado */}
-          <button
-            onClick={() => {
-              navigate("/admin/vereadores");
-              setMenuOpen(false);
-            }}
-            className="hover:underline text-left py-1" // Padding adicionado
-          >
-            Vereadores {/* Ajustado texto */}
-          </button>
-          
-          <button
-            onClick={handleLogout} // A função handleLogout já fecha o menu
-            className="hover:underline text-left py-1" // Padding adicionado
-          >
-            Sair
-          </button>
-        </nav>
+        <nav className="sm:hidden mt-4 flex flex-col space-y-2 border-t border-blue-800 pt-2">
+      <button
+        onClick={() => {
+          navigate("/admin/vereadores");
+          setMenuOpen(false);
+        }}
+        className="hover:underline text-left py-1"
+      >
+        Vereadores
+      </button>
+
+      <button
+        onClick={() => {
+          navigate("/admin/ouvidor");
+          setMenuOpen(false);
+        }}
+        className="hover:underline text-left py-1"
+      >
+        Ouvidor
+      </button>
+
+      <button
+        onClick={handleLogout}
+        className="hover:underline text-left py-1"
+      >
+        Sair
+      </button>
+    </nav>
       )}
     </header>
   );

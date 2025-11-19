@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom'; // useNavigate importado corretamente
 import { useAuth } from '../../hooks/useAuth'; // useAuth importado corretamente
+import Footer from '../../components/Footer';
 
 const HomePage = () => {
   const navigate = useNavigate(); // Hook para navegação
@@ -16,6 +17,7 @@ const HomePage = () => {
   };
 
   return (
+    <>
     <div
       className="min-h-screen bg-cover bg-center flex items-center justify-center px-4 relative"
       style={{
@@ -72,8 +74,12 @@ const HomePage = () => {
           </button>
         </div>
       </div>
+     
     </div>
+     <Footer/>
+     </>
   );
+
 };
 
 export default HomePage;

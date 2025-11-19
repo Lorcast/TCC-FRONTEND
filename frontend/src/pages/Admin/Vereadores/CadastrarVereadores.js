@@ -22,6 +22,11 @@ const CadastrarVereadores = () => {
   const [mensagemSucesso, setMensagemSucesso] = useState(null);
   const [mensagemErro, setMensagemErro] = useState(null);
 
+  const validateEmail = (email) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+  };
+
   // Carregar dados do vereador (edição)
   useEffect(() => {
     const carregarDados = async () => {
@@ -50,8 +55,30 @@ const CadastrarVereadores = () => {
     carregarDados();
   }, [id]);
 
+
+
   const handleChange = (e) => {
     const { name, value } = e.target;
+
+if (name === "email_contato") {
+      setForm((prev) => ({ ...prev, [name]: value }));
+
+      if (!validateEmail(value)) {
+        setErros((prev) => ({
+          ...prev,
+          email_contato: "Digite um e-mail válido."
+        }));
+      } else {
+        setErros((prev) => {
+          const novo = { ...prev };
+          delete novo.email_contato;
+          return novo;
+        });
+      }
+
+      return;
+    }
+
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -68,6 +95,8 @@ const CadastrarVereadores = () => {
     if (!form.email_contato?.trim()) novosErros.email_contato = "Digite o e-mail de contato.";
     if (!form.legislatura?.trim()) novosErros.legislatura = "Digite a legislatura.";
     if (!form.situacao?.trim()) novosErros.situacao = "Escolha a situação.";
+
+    
 
     if (Object.keys(novosErros).length > 0) {
       setErros(novosErros);
@@ -148,9 +177,14 @@ const CadastrarVereadores = () => {
               name="email_contato"
               value={form.email_contato}
               onChange={handleChange}
-              className="w-full border rounded p-2"
+             className={`w-full border rounded p-2 ${
+                erros.email_contato ? "border-red-500" : "border-gray-300"
+              }`}
             />
-            {erros.email_contato && <p className="text-red-500 text-sm mt-1">{erros.email_contato}</p>}
+
+            {erros.email_contato && (
+              <p className="text-red-500 text-sm mt-1">{erros.email_contato}</p>
+            )}
           </div>
 
           <div>

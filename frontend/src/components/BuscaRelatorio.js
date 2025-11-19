@@ -15,7 +15,7 @@ const BuscaRelatorio = ({ filtrar }) => {
   const [assunto, setAssunto] = useState("");
   
   // Novos estados para controle do PDF
-  const [isGerandoPDF, setIsGerandoPDF] = useState(false);
+  const [isGerandoPDF, setIsGerandoPDF] = useState(false); //evita cliques repetidos e mostra estado "gerando".
   const [mensagemFeedback, setMensagemFeedback] = useState(""); 
 
   // Estados das opções dos selects
@@ -68,7 +68,7 @@ const BuscaRelatorio = ({ filtrar }) => {
           tipo,
           created_at,
           status,
-          descricao,
+          assunto,
           vereadores ( nome_completo )
         `);
 
