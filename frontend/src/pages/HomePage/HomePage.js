@@ -1,18 +1,18 @@
 import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom'; // useNavigate importado corretamente
-import { useAuth } from '../../hooks/useAuth'; // useAuth importado corretamente
+import { NavLink, useNavigate } from 'react-router-dom'; 
+import { useAuth } from '../../hooks/useAuth'; 
 import Footer from '../../components/Footer';
 
 const HomePage = () => {
-  const navigate = useNavigate(); // Hook para navegação
-  const { user } = useAuth(); // Acessa o user do contexto de autenticação
+  const navigate = useNavigate(); 
+  const { user } = useAuth(); 
 
-  // Função para redirecionar conforme o login do usuário
+  
   const handleAdminClick = () => {
     if (user) {
-      navigate('/admin'); // Se estiver logado, vai para a área administrativa
+      navigate('/admin'); 
     } else {
-      navigate('/login'); // Se não estiver logado, vai para a tela de login
+      navigate('/login'); 
     }
   };
 
@@ -22,22 +22,22 @@ const HomePage = () => {
       className="min-h-screen bg-cover bg-center flex items-center justify-center px-4 relative"
       style={{
         backgroundImage: "url('/fundo-camara.jpeg')",
-        backgroundColor: 'rgba(0, 0, 0, 0.5)' // Fallback escuro para a imagem de fundo
+        backgroundColor: 'rgba(0, 0, 0, 0.5)' 
       }}
     >
-      {/* Sobreposição escura para o fundo */}
+    
       <div className="absolute inset-0 bg-black bg-opacity-70 z-0"></div>
 
-      {/* Conteúdo centralizado verticalmente */}
+     
       <div className="relative z-10 flex flex-col items-center text-center text-white">
-        {/* LOGO fora do fluxo normal para não empurrar o conteúdo */}
+      
         <img
           src="/logo.png"
           alt="Brasão do Município"
           className="absolute top-[-180px] w-80 md:w-96 drop-shadow-lg"
         />
 
-        {/* Espaço reservado para que o conteúdo não suba por cima da logo */}
+      
         <div className="h-32 md:h-40"></div>
 
         <h1 className="text-4xl md:text-5xl font-extrabold drop-shadow-xl mb-2">
@@ -47,7 +47,7 @@ const HomePage = () => {
           CÂMARA DE JUSSARA
         </p>
 
-        {/* Botões de ação */}
+        
         <div className="flex flex-col sm:flex-row gap-4">
           <NavLink
             to="/denuncia"

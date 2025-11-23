@@ -325,6 +325,35 @@ const ConsultaProtocolo = () => {
 
             </div>
 
+               <div>
+
+              <span className="font-semibold text-gray-800">Anexo do vereador:</span>
+
+              {resultado.anexos && resultado.anexos.length > 0 ? (
+
+                <a
+
+                  href={supabase.storage.from('anexos-ouvidoria').getPublicUrl(resultado.anexos[0].caminho_arquivo).data.publicUrl}
+
+                  target="_blank"
+
+                  rel="noopener noreferrer"
+
+                  className="text-blue-600 underline hover:text-blue-800 ml-2"
+
+                >
+
+                  {resultado.anexos[0].nome_original || 'Visualizar anexo'}
+
+                </a>
+
+              ) : (
+
+                <span className="text-gray-500 ml-2">Nenhum anexo enviado.</span>
+
+              )}
+
+            </div>
 
 
             {/* Resposta da Ouvidoria e Data da Resposta */}

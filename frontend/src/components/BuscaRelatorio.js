@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
-// 1. Importar as bibliotecas de PDF (FORMA CORRIGIDA)
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -13,6 +12,9 @@ const BuscaRelatorio = ({ filtrar }) => {
   const [dataInicial, setDataInicial] = useState("");
   const [dataFinal, setDataFinal] = useState("");
   const [assunto, setAssunto] = useState("");
+  const [ouvidor, setOuvidor] = useState(null);
+  
+
   
   // Novos estados para controle do PDF
   const [isGerandoPDF, setIsGerandoPDF] = useState(false); //evita cliques repetidos e mostra estado "gerando".
@@ -23,8 +25,19 @@ const BuscaRelatorio = ({ filtrar }) => {
   const [tiposManifestacao, setTiposManifestacao] = useState([]);
 
   useEffect(() => {
-    const fetchOpcoes = async () => {
-      // Busca vereadores
+       const fetchOpcoes = async () => {
+      //Busca ouvidor
+      const {data:ouvidorData, error:ouvidorError} = await supabase 
+      .from("ouvidor")
+      .select("*")
+      .limit(1)
+      .single();
+      if(!ouvidorError) {
+        setOuvidor(ouvidorData);
+        }
+
+      
+      
       const { data: vereadoresData } = await supabase
         .from("vereadores")
         .select("id, nome_completo, situacao")
@@ -32,7 +45,7 @@ const BuscaRelatorio = ({ filtrar }) => {
         .order("nome_completo");
       setVereadoresOpcoes(vereadoresData || []);
 
-      // Busca tipos
+      
       const { data: tiposData } = await supabase
         .from("solicitacoes")
         .select("tipo");
@@ -46,18 +59,17 @@ const BuscaRelatorio = ({ filtrar }) => {
   }, []);
 
   const aplicarFiltros = () => {
-    setMensagemFeedback(""); // Limpa feedback ao buscar
-    // LINHA CORRIGIDA: Removi o caractere inválido (non-breaking space)
+    setMensagemFeedback(""); 
     filtrar({ protocolo, vereador, tipo, status, dataInicial, dataFinal, assunto});
   };
 
-  // 3. Função principal para gerar o PDF
+  //Função principal para gerar o PDF
   const gerarPDF = async () => {
     setIsGerandoPDF(true);
     setMensagemFeedback("Gerando relatório... Isso pode levar alguns segundos.");
 
     try {
-      // 4. Construir a query (baseada na sua lógica do AreaAdmin.js)
+     
       let query = supabase
         .from("solicitacoes")
         .select(`
@@ -86,7 +98,7 @@ const BuscaRelatorio = ({ filtrar }) => {
       // Ordenar, mas SEM paginar (.range())
       query = query.order("created_at", { ascending: false });
 
-      // 5. Executar a query para o PDF
+      // Executar a query para o PDF
       const { data, error } = await query;
 
       if (error) {
@@ -99,7 +111,7 @@ const BuscaRelatorio = ({ filtrar }) => {
         return;
       }
 
-      // 6. Dados encontrados! Vamos criar o PDF.
+      
       setMensagemFeedback(`Encontrados ${data.length} registros. Compilando PDF...`);
 
       const doc = new jsPDF({ orientation: "landscape" }); // 'landscape' (paisagem) é melhor para tabelas largas
@@ -109,9 +121,10 @@ const BuscaRelatorio = ({ filtrar }) => {
       doc.text("Relatório de Manifestações", 14, 22);
       doc.setFontSize(10);
       doc.text(`Total de registros: ${data.length}`, 14, 28);
+      doc.text(`Ouvidor responsável: ${ouvidor?.nome_responsavel || "Não informado"}`, 14, 39);
       doc.text(`Gerado em: ${new Date().toLocaleString("pt-BR")}`, 14, 34);
 
-      // Definir colunas (baseado na sua tabela do AreaAdmin.js)
+      // Definir colunas
       const colunas = [
         { header: "Protocolo", dataKey: "protocolo" },
         { header: "Data", dataKey: "data_formatada" },
@@ -119,7 +132,7 @@ const BuscaRelatorio = ({ filtrar }) => {
         { header: "Tipo", dataKey: "tipo" },
         { header: "Vereador", dataKey: "vereador_formatado" },
         { header: "Status", dataKey: "status" },
-        { header: "Mensagem", dataKey: "descricao" },
+        { header: "assunto", dataKey: "assunto" },
       ];
 
       // Formatar os dados para a tabela
@@ -130,7 +143,7 @@ const BuscaRelatorio = ({ filtrar }) => {
         vereador_formatado: item.vereadores?.nome_completo || "N/D",
       }));
 
-      // 2. Criar a tabela (FORMA CORRIGIDA)
+      // Criar a tabela 
       autoTable(doc, {
         columns: colunas,
         body: dadosFormatados,
@@ -138,7 +151,7 @@ const BuscaRelatorio = ({ filtrar }) => {
         theme: 'striped',
         headStyles: { fillColor: [13, 109, 253] }, // Um azul (R, G, B)
         columnStyles: {
-          descricao: { cellWidth: 80 } // Quebra de linha para a coluna de mensagem
+          assunto: { cellWidth: 80 } // Quebra de linha para a coluna de mensagem
         }
       });
 
@@ -158,7 +171,7 @@ const BuscaRelatorio = ({ filtrar }) => {
     <div className="bg-white shadow-md rounded-lg p-6 mb-6 mt-10">
       <h2 className="text-xl font-semibold mb-4">Busca e Relatórios</h2>
 
-      {/* 7. Área de Feedback */}
+     
       {mensagemFeedback && (
         <div 
           className={`p-4 mb-4 rounded-md ${
@@ -171,13 +184,20 @@ const BuscaRelatorio = ({ filtrar }) => {
         </div>
       )}
 
-      {/* Seus campos de filtro (sem alteração) */}
+     
       <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
         <input
           type="text"
           placeholder="Protocolo"
           value={protocolo}
           onChange={(e) => setProtocolo(e.target.value)}
+          className="border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+        />
+        <input
+          type="text"
+          placeholder="Assunto"
+          value={assunto}
+          onChange={(e) => setAssunto(e.target.value)}
           className="border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
         />
         <select
@@ -214,6 +234,7 @@ const BuscaRelatorio = ({ filtrar }) => {
           <option value="Em análise">Em análise</option>
           <option value="Finalizado">Finalizado</option>
         </select>
+         
         <input
           type="date"
           value={dataInicial}
@@ -226,25 +247,19 @@ const BuscaRelatorio = ({ filtrar }) => {
           onChange={(e) => setDataFinal(e.target.value)}
           className="border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
         />
-        <input
-          type="text"
-          placeholder="Assunto"
-          value={assunto}
-          onChange={(e) => setAssunto(e.target.value)}
-          className="border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-        />
+       
       </div>
 
       <div className="flex justify-end mt-3 gap-2">
         <button
           onClick={aplicarFiltros}
           className="bg-green-700 text-white font-semibold px-6 py-2 rounded-md shadow hover:bg-green-800 transition w-full sm:w-auto disabled:opacity-50 disabled:cursor-wait"
-          disabled={isGerandoPDF} // Desabilita enquanto gera PDF
+          disabled={isGerandoPDF}
         >
           Buscar
         </button>
 
-        {/* 8. Botão de Relatório Atualizado */}
+       
         <button 
           onClick={gerarPDF}
           disabled={isGerandoPDF}

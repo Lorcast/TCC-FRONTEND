@@ -51,10 +51,10 @@ const Footer = () => {
     <footer className="w-full bg-gray-900 text-gray-200 py-12 border-t border-gray-700">
       <div className="max-w-6xl mx-auto px-6">
 
-        {/* GRID DOS DOIS QUADROS (LADO A LADO) */}
+        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
 
-          {/* QUADRO DO OUVIDOR */}
+         
           <div className="bg-gray-800 p-5 rounded-lg shadow-md">
             <h3 className="text-lg font-semibold text-white mb-4">
               Informações do Ouvidor
@@ -66,7 +66,7 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* QUADRO DE ESTATÍSTICAS */}
+          
           <div className="bg-gray-800 p-5 rounded-lg shadow-md">
             <h3 className="text-lg font-semibold text-white mb-4">
               manifestações da Ouvidoria
@@ -85,7 +85,7 @@ const Footer = () => {
 
          <div className="mt-12 flex justify-center">
           <img
-            src="/logoOuvir.png"    // coloque sua logo aqui (public/logo.png)
+            src="/logoOuvir.png"    
             alt="Logo"
             className="w-40 opacity-90 hover:opacity-100 transition"
           />

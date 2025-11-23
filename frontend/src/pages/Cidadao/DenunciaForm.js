@@ -86,15 +86,6 @@ const validarCPF = (cpf) => {
   return resto === parseInt(cpf.charAt(10));
 };
     
-
-
-
-
-
-
-
-
-
   // --- Controle de inputs ---
   const handleChange = (e) => {
     const { name, value } = e.target;

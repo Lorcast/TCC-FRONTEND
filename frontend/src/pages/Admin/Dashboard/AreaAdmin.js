@@ -28,7 +28,7 @@ const AreaAdmin = () => {
       filtros.status ||
       filtros.dataInicial ||
       filtros.dataFinal ||
-      filtros.mensagem;
+      filtros.assunto;
 
     setFiltroAtivo(!!temFiltros);
 
@@ -43,7 +43,7 @@ const AreaAdmin = () => {
         tipo,
         created_at,
         status,
-        descricao,
+        assunto,
         resposta_admin,
         id_vereador_destino,
         vereadores ( nome_completo )
@@ -61,7 +61,7 @@ const AreaAdmin = () => {
       query = query.lte("created_at", filtros.dataFinal);
     }
 
-    if (filtros.mensagem) query = query.ilike("descricao", `%${filtros.mensagem}%`);
+    if (filtros.assunto) query = query.ilike("assunto", `%${filtros.assunto}%`);
 
     query = query.order("created_at", { ascending: false }).range(offsetAtual, offsetAtual + limite - 1);
 
@@ -113,7 +113,7 @@ const AreaAdmin = () => {
                       <th className="px-2 py-1 border">Tipo</th>
                       <th className="px-2 py-1 border">Vereador</th>
                       <th className="px-2 py-1 border">Status</th>
-                      <th className="px-2 py-1 border">Mensagem</th>
+                      <th className="px-2 py-1 border">Assunto</th>
                       <th className="px-2 py-1 border">Data</th>
                       <th className="px-2 py-1 border text-center">Ações</th>
                     </tr>
@@ -143,7 +143,7 @@ const AreaAdmin = () => {
 
                         <td className="px-2 py-1 border">{m.status}</td>
 
-                        <td className="px-2 py-1 border truncate max-w-xs">{m.descricao}</td>
+                        <td className="px-2 py-1 border truncate max-w-xs">{m.assunto}</td>
 
                         <td className="px-2 py-1 border">{new Date(m.created_at).toLocaleString("pt-BR")}</td>
 

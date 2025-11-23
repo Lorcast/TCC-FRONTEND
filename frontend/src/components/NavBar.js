@@ -5,34 +5,37 @@ import { useAuth } from "../hooks/useAuth"; // Importa o hook useAuth
 
 const NavBar = () => {
   const navigate = useNavigate();
-  const { logout } = useAuth(); // Pega a função logout do hook
+  const { logout } = useAuth(); 
   const [menuOpen, setMenuOpen] = useState(false);
 
   const handleLogout = async () => {
-    // Chama a função logout do hook (que usa Supabase)
+    
     await logout();
-    // A navegação pode ser desnecessária se o ProtecaoAdmin já redirecionar
-    // Mas pode manter por segurança ou se quiser redirecionar imediatamente
     navigate("/login", { replace: true });
-    setMenuOpen(false); // Fecha o menu mobile se estiver aberto
+    setMenuOpen(false); 
   };
 
-  // Restante do componente permanece igual...
+  
   return (
     <header className="bg-blue-900 text-white px-6 py-4 fixed w-full top-0 z-50 shadow-md">
       <div className="flex justify-between items-center">
         {/* Título */}
-        <h1 className="text-xl font-bold">Ouvidoria - Administrador</h1> {/* Ajustado título */}
+       <button
+  onClick={() => navigate("/")} // <-- Coloque o caminho da sua home
+  className="text-xl font-bold hover:underline"
+>
+  Ouvidoria - Administrador
+</button>
 
-        {/* Botão menu mobile */}
+        
         <button
           className="sm:hidden focus:outline-none"
           onClick={() => setMenuOpen(!menuOpen)}
-          aria-label={menuOpen ? "Fechar menu" : "Abrir menu"} // Acessibilidade
-          aria-expanded={menuOpen} // Acessibilidade
+          aria-label={menuOpen ? "Fechar menu" : "Abrir menu"} 
+          aria-expanded={menuOpen}
         >
-          <svg /* Seu SVG ... */ >
-             {/* ... path icons ... */}
+          <svg  >
+            
           </svg>
         </button>
 
