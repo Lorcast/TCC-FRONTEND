@@ -2,8 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { GoArrowLeft } from "react-icons/go";
-import { supabase } from '../../supabaseClient'; // Importa a conexão com o Supabase
-
+import { supabase } from '../../supabaseClient'; 
 const ConsultaProtocolo = () => {
 
   // Estados da página
