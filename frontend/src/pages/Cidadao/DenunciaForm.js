@@ -26,7 +26,7 @@ const DenunciaForm = () => {
 
   const navigate = useNavigate();
 
-  // --- Buscar vereadores ativos ---
+  // Buscar vereadores ativos
   useEffect(() => {
     const fetchVereadores = async () => {
       const { data, error } = await supabase
@@ -77,7 +77,7 @@ const DenunciaForm = () => {
     setFormManifestacao((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Função simplificada para receber o arquivo do componente filho
+  // Função para receber o arquivo do componente filho
   const handleAnexoSelecionado = (arquivo) => {
     setFormManifestacao((prev) => ({ ...prev, anexos: arquivo }));
   };
@@ -97,7 +97,7 @@ const DenunciaForm = () => {
     
   }, []);
 
-  // --- Envio para Supabase ---
+  // Envio para Supabase 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -182,7 +182,6 @@ const DenunciaForm = () => {
     }
   };
 
-  // --- JSX ---
   return (
     <div className="min-h-screen bg-gray-100 p-6 flex items-center justify-center">
       <form onSubmit={handleSubmit} className="w-full max-w-2xl bg-white p-8 rounded-xl shadow-lg space-y-6" noValidate>

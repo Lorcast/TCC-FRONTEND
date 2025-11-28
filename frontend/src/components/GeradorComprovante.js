@@ -12,8 +12,9 @@ export const gerarComprovantePDF = (dados, numProtocolo, listaVereadores) => {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
     doc.text("Comprovante de Registro - Ouvidoria", margemEsquerda, yPos);
-    
-    yPos += 10;
+
+    yPos += 10; // Espaçamento vertical
+
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
     doc.text(`Gerado em: ${new Date().toLocaleString("pt-BR")}`, margemEsquerda, yPos);
@@ -32,12 +33,13 @@ export const gerarComprovantePDF = (dados, numProtocolo, listaVereadores) => {
     // Dados da Manifestação
     doc.setFontSize(12);
     doc.text("Detalhes da Manifestação:", margemEsquerda, yPos);
+
     yPos += 8;
 
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
     
-    // Busca o nome do vereador na lista passada
+    // Busca o nome do vereador na lista 
     const vereadorSelecionado = listaVereadores.find(v => String(v.id) === String(dados.vereador));
     const nomeVereador = vereadorSelecionado ? vereadorSelecionado.nome_completo : "Não informado";
 

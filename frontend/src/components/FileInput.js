@@ -1,25 +1,21 @@
 import React from "react";
 
+// Logica de validação
 const FileInput = ({ onFileSelect }) => {
-  // A lógica de validação fica isolada aqui dentro
   const handleFileChange = (e) => {
     const file = e.target.files[0];
 
     if (file) {
-      // Limite de 50MB
-      const tamanhoMaximo = 50 * 1024 * 1024; 
+      const tamanhoMaximo = 50 * 1024 * 1024; // Limite do arquivo de 50MB
 
       if (file.size > tamanhoMaximo) {
         alert("O arquivo selecionado é muito grande. O limite é de 50MB.");
-        e.target.value = ""; // Limpa o input visualmente
-        onFileSelect(null); // Avisa o pai que não tem arquivo válido
+        e.target.value = ""; 
+        onFileSelect(null); 
         return;
       }
-
-      // Se passou na validação, envia o arquivo para o componente pai
       onFileSelect(file);
     } else {
-      // Se o usuário cancelou a seleção
       onFileSelect(null);
     }
   };
@@ -30,8 +26,7 @@ const FileInput = ({ onFileSelect }) => {
       <input
         id="anexo-input"
         type="file"
-        // Aceita imagens, documentos e vídeos
-        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.mp4,.avi,.mov,.mkv"
+        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.mp4,.avi,.mov,.mkv" // Formatos de arquivos aceitos
         onChange={handleFileChange}
         className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
       />

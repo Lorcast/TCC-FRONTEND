@@ -1,4 +1,3 @@
-// src/pages/Admin/Vereadores/CadastrarVereadores.js
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "../../../supabaseClient";
@@ -22,12 +21,13 @@ const CadastrarVereadores = () => {
   const [mensagemSucesso, setMensagemSucesso] = useState(null);
   const [mensagemErro, setMensagemErro] = useState(null);
 
+  // Função auxiliar para validar formato de e-mail
   const validateEmail = (email) => {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return regex.test(email);
   };
 
-  // Carregar dados do vereador (edição)
+  // Carregar dados do vereador
   useEffect(() => {
     const carregarDados = async () => {
       if (!id) return;
@@ -55,12 +55,10 @@ const CadastrarVereadores = () => {
     carregarDados();
   }, [id]);
 
-
-
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-if (name === "email_contato") {
+    if (name === "email_contato") {
       setForm((prev) => ({ ...prev, [name]: value }));
 
       if (!validateEmail(value)) {
@@ -75,7 +73,6 @@ if (name === "email_contato") {
           return novo;
         });
       }
-
       return;
     }
 
@@ -89,14 +86,14 @@ if (name === "email_contato") {
     setMensagemErro(null);
     setMensagemSucesso(null);
 
+    // Validação Front-end
     const novosErros = {};
     if (!form.nome_completo?.trim()) novosErros.nome_completo = "Digite o nome do vereador.";
     if (!form.partido?.trim()) novosErros.partido = "Digite o partido.";
     if (!form.email_contato?.trim()) novosErros.email_contato = "Digite o e-mail de contato.";
+    else if (!validateEmail(form.email_contato)) novosErros.email_contato = "E-mail inválido.";
     if (!form.legislatura?.trim()) novosErros.legislatura = "Digite a legislatura.";
     if (!form.situacao?.trim()) novosErros.situacao = "Escolha a situação.";
-
-    
 
     if (Object.keys(novosErros).length > 0) {
       setErros(novosErros);
@@ -105,6 +102,27 @@ if (name === "email_contato") {
     }
 
     try {
+      // Verificar se o e-mail já existe no banco 
+      let queryEmail = supabase
+        .from("vereadores")
+        .select("id")
+        .eq("email_contato", form.email_contato.trim());
+
+      if (id) {
+        queryEmail = queryEmail.neq("id", id);
+      }
+
+      const { data: emailExistente, error: erroCheck } = await queryEmail;
+
+      if (erroCheck) throw erroCheck;
+
+      if (emailExistente && emailExistente.length > 0) {
+        setErros({ email_contato: "Este e-mail já está cadastrado para outro vereador." });
+        setCarregando(false);
+        return; // Para o envio aqui
+      }
+
+      // Se passou na validação, prossegue com Insert ou Update
       if (id) {
         const { error } = await supabase
           .from("vereadores")
@@ -116,11 +134,13 @@ if (name === "email_contato") {
         const { error } = await supabase.from("vereadores").insert([form]);
         if (error) throw error;
         setMensagemSucesso("Vereador cadastrado com sucesso!");
+        // Limpa o formulário apenas no cadastro
         setForm({ nome_completo: "", partido: "", email_contato: "", legislatura: "", situacao: "" });
       }
+
     } catch (err) {
-      console.error("Erro ao cadastrar vereador:", err);
-      setMensagemErro("erro ao cadastrar o vereador. Tente novamente.");
+      console.error("Erro ao salvar vereador:", err);
+      setMensagemErro("Erro ao salvar os dados. Tente novamente.");
     } finally {
       setCarregando(false);
     }
@@ -148,7 +168,7 @@ if (name === "email_contato") {
               name="nome_completo"
               value={form.nome_completo}
               onChange={handleChange}
-              className="w-full border rounded p-2"
+              className={`w-full border rounded p-2 ${erros.nome_completo ? "border-red-500" : ""}`}
             />
             {erros.nome_completo && <p className="text-red-500 text-sm mt-1">{erros.nome_completo}</p>}
           </div>
@@ -163,7 +183,7 @@ if (name === "email_contato") {
               placeholder="Ex: PT, PSDB, MDB"
               value={form.partido}
               onChange={handleChange}
-              className="w-full border rounded p-2"
+              className={`w-full border rounded p-2 ${erros.partido ? "border-red-500" : ""}`}
             />
             {erros.partido && <p className="text-red-500 text-sm mt-1">{erros.partido}</p>}
           </div>
@@ -177,11 +197,10 @@ if (name === "email_contato") {
               name="email_contato"
               value={form.email_contato}
               onChange={handleChange}
-             className={`w-full border rounded p-2 ${
+              className={`w-full border rounded p-2 ${
                 erros.email_contato ? "border-red-500" : "border-gray-300"
               }`}
             />
-
             {erros.email_contato && (
               <p className="text-red-500 text-sm mt-1">{erros.email_contato}</p>
             )}
@@ -197,7 +216,7 @@ if (name === "email_contato") {
               placeholder="Ex: 2025–2028"
               value={form.legislatura}
               onChange={handleChange}
-              className="w-full border rounded p-2"
+              className={`w-full border rounded p-2 ${erros.legislatura ? "border-red-500" : ""}`}
             />
             {erros.legislatura && <p className="text-red-500 text-sm mt-1">{erros.legislatura}</p>}
           </div>
@@ -206,26 +225,28 @@ if (name === "email_contato") {
             <label className="block font-medium mb-1">
               Situação<span className="text-red-600"> *</span>
             </label>
-            <label className="flex items-center gap-2">
-              <input
-                type="radio"
-                name="situacao"
-                value="Ativo"
-                checked={form.situacao === "Ativo"}
-                onChange={handleChange}
-              />
-              Ativo
-            </label>
-            <label className="flex items-center gap-2">
-              <input
-                type="radio"
-                name="situacao"
-                value="Inativo"
-                checked={form.situacao === "Inativo"}
-                onChange={handleChange}
-              />
-              Inativo
-            </label>
+            <div className="flex gap-4">
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="situacao"
+                  value="Ativo"
+                  checked={form.situacao === "Ativo"}
+                  onChange={handleChange}
+                />
+                Ativo
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="situacao"
+                  value="Inativo"
+                  checked={form.situacao === "Inativo"}
+                  onChange={handleChange}
+                />
+                Inativo
+              </label>
+            </div>
             {erros.situacao && <p className="text-red-500 text-sm mt-1">{erros.situacao}</p>}
           </div>
 
@@ -239,13 +260,13 @@ if (name === "email_contato") {
         </form>
 
         {mensagemSucesso && (
-          <div className="text-green-700 p-4 rounded-md mt-4 text-center">
+          <div className="text-green-700 bg-green-100 border border-green-400 p-4 rounded-md mt-4 text-center">
             <p>{mensagemSucesso}</p>
           </div>
         )}
 
         {mensagemErro && (
-          <div className="text-red-700 p-4 rounded-md mt-4 text-center">
+          <div className="text-red-700 bg-red-100 border border-red-400 p-4 rounded-md mt-4 text-center">
             <p>{mensagemErro}</p>
           </div>
         )}

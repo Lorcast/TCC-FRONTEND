@@ -25,7 +25,7 @@ const BuscaRelatorio = ({ filtrar }) => {
 
   useEffect(() => {
     const fetchDadosIniciais = async () => {
-      // 1. Busca vereadores
+      // Busca vereadores
       const { data: vereadoresData } = await supabase
         .from("vereadores")
         .select("id, nome_completo")
@@ -33,7 +33,7 @@ const BuscaRelatorio = ({ filtrar }) => {
         .order("nome_completo");
       setVereadoresOpcoes(vereadoresData || []);
 
-      // 2. Busca tipos de manifestação
+      // Busca tipos de manifestação
       const { data: tiposData } = await supabase
         .from("solicitacoes")
         .select("tipo");
@@ -43,21 +43,24 @@ const BuscaRelatorio = ({ filtrar }) => {
         setTiposManifestacao(unicos);
       }
 
-      // 3. Busca o nome do Ouvidor (Tabela 'ouvidor')
+      // Busca o nome do Ouvidor (Tabela 'ouvidor')
       try {
         const { data: ouvidorData, error } = await supabase
           .from("ouvidor") 
           .select("nome_responsavel")
           .single();
         
-        if (ouvidorData) {
-          setNomeOuvidor(ouvidorData.nome_responsavel);
+        if (error) {
+            // Tratamento de erro na busca do ouvidor ou erros de conexão/inesperados
+            console.warn("Aviso ao buscar ouvidor:", error.message);
+            setNomeOuvidor("Responsável pela Ouvidoria");
+        } else if (ouvidorData) {
+            setNomeOuvidor(ouvidorData.nome_responsavel);
         } else {
-          console.warn("Tabela 'ouvidor' vazia ou não encontrada. Usando padrão.");
-          setNomeOuvidor("Responsável pela Ouvidoria");
+            setNomeOuvidor("Responsável pela Ouvidoria");
         }
       } catch (error) {
-        console.error("Erro ao buscar ouvidor:", error);
+        console.error("Erro inesperado ao buscar ouvidor:", error);
         setNomeOuvidor("Responsável pela Ouvidoria");
       }
     };
@@ -70,17 +73,13 @@ const BuscaRelatorio = ({ filtrar }) => {
     filtrar({ protocolo, vereador, tipo, status, dataInicial, dataFinal, assunto});
   };
 
-  // --- FUNÇÃO UNIFICADA PARA GERAR PDF ---
+  // FUNÇAO PARA GERAR PDF 
   const gerarPDF = async (tipoRelatorio) => {
     setIsGerandoPDF(true);
     setMensagemFeedback(`Gerando relatório ${tipoRelatorio === 'publico' ? 'Público' : 'Geral'}... Aguarde.`);
 
     try {
-      // 1. Construir a query
-      // Tenta usar a VIEW para ter dados mais completos/descriptografados se necessário
-      // Se a view não estiver disponível, pode usar 'solicitacoes' diretamente
-      const tabela = "solicitacoes"; // ou "vw_solicitacoes_admin" se configurado
-
+      const tabela = "solicitacoes"; 
       let query = supabase
         .from(tabela) 
         .select(`
@@ -130,7 +129,7 @@ const BuscaRelatorio = ({ filtrar }) => {
         return;
       }
 
-      // --- 2. Configuração do PDF ---
+      // Configuração do PDF
       const isPublico = tipoRelatorio === "publico";
       
       // Público = Retrato | Geral = Paisagem
@@ -138,13 +137,12 @@ const BuscaRelatorio = ({ filtrar }) => {
 
       // Título e Cabeçalho
       const tituloRelatorio = isPublico ? "Relatório Público de Transparência" : "Relatório Geral Administrativo";
-      const corCabecalho = isPublico ? [46, 204, 113] : [13, 109, 253]; // Verde / Azul
-
+      const corCabecalho = isPublico ? [46, 204, 113] : [13, 109, 253]; 
       doc.setFontSize(16);
       doc.text(tituloRelatorio, 14, 22);
       
       doc.setFontSize(10);
-      // Exibe o nome do ouvidor buscado do banco
+      // Exibe informações buscado no banco
       doc.text(`Ouvidor Responsável: ${nomeOuvidor}`, 14, 28);
       doc.text(`Total de registros: ${data.length}`, 14, 34);
       doc.text(`Gerado em: ${new Date().toLocaleString("pt-BR")}`, 14, 40);
@@ -157,11 +155,10 @@ const BuscaRelatorio = ({ filtrar }) => {
         doc.text("* Este relatório não contém dados pessoais sensíveis, conforme LGPD.", 14, 46);
         startY = 50;
       } else {
-         // Resetar cor para preto se não for público
          doc.setTextColor(0);
       }
 
-      // --- 3. Definição de Colunas e Dados ---
+      // Definição de Colunas e Dados
       let colunas = [];
       let dadosFormatados = [];
 
@@ -204,7 +201,7 @@ const BuscaRelatorio = ({ filtrar }) => {
         }));
       }
 
-      // --- 4. Gerar Tabela ---
+      // Função Gerar Tabela 
       autoTable(doc, {
         columns: colunas,
         body: dadosFormatados,
@@ -214,7 +211,7 @@ const BuscaRelatorio = ({ filtrar }) => {
         styles: { fontSize: isPublico ? 10 : 9 },
       });
 
-      // Salvar
+      // Função Salvar Relatório
       const nomeArquivo = isPublico ? "relatorio_publico.pdf" : "relatorio_geral_admin.pdf";
       doc.save(nomeArquivo);
       

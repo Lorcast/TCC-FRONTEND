@@ -85,7 +85,7 @@ const Footer = () => {
 
          <div className="mt-12 flex justify-center">
           <img
-            src="/logoOuvir.png"    // coloque sua logo aqui (public/logo.png)
+            src="/logoOuvir.png"  
             alt="Logo"
             className="w-40 opacity-90 hover:opacity-100 transition"
           />
