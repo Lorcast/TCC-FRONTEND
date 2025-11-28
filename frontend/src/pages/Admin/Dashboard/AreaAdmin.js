@@ -33,7 +33,7 @@ const AreaAdmin = () => {
     setFiltroAtivo(!!temFiltros);
 
     let query = supabase
-      .from("solicitacoes")
+      .from("vw_solicitacoes_admin")
       .select(
         `
         id,

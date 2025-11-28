@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { FaFilePdf, FaGlobeAmericas, FaSearch } from "react-icons/fa";
 
 const BuscaRelatorio = ({ filtrar }) => {
   // Estados dos filtros
@@ -12,38 +13,27 @@ const BuscaRelatorio = ({ filtrar }) => {
   const [dataInicial, setDataInicial] = useState("");
   const [dataFinal, setDataFinal] = useState("");
   const [assunto, setAssunto] = useState("");
-  const [ouvidor, setOuvidor] = useState(null);
   
-  // Novos estados para controle do PDF
-  const [isGerandoPDF, setIsGerandoPDF] = useState(false); //evita cliques repetidos e mostra estado "gerando".
+  // Estados para controle do PDF e Feedback
+  const [isGerandoPDF, setIsGerandoPDF] = useState(false); 
   const [mensagemFeedback, setMensagemFeedback] = useState(""); 
+  const [nomeOuvidor, setNomeOuvidor] = useState(""); 
 
   // Estados das opções dos selects
   const [vereadoresOpcoes, setVereadoresOpcoes] = useState([]);
   const [tiposManifestacao, setTiposManifestacao] = useState([]);
 
   useEffect(() => {
-       const fetchOpcoes = async () => {
-      //Busca ouvidor
-      const {data:ouvidorData, error:ouvidorError} = await supabase 
-      .from("ouvidor")
-      .select("*")
-      .limit(1)
-      .single();
-      if(!ouvidorError) {
-        setOuvidor(ouvidorData);
-        }
-
-      
-      
+    const fetchDadosIniciais = async () => {
+      // Busca vereadores
       const { data: vereadoresData } = await supabase
         .from("vereadores")
-        .select("id, nome_completo, situacao")
+        .select("id, nome_completo")
         .eq("situacao", "Ativo")
         .order("nome_completo");
       setVereadoresOpcoes(vereadoresData || []);
 
-      
+      // Busca tipos de manifestação
       const { data: tiposData } = await supabase
         .from("solicitacoes")
         .select("tipo");
@@ -52,8 +42,30 @@ const BuscaRelatorio = ({ filtrar }) => {
         const unicos = [...new Set(tiposData.map((t) => t.tipo))];
         setTiposManifestacao(unicos);
       }
+
+      // Busca o nome do Ouvidor (Tabela 'ouvidor')
+      try {
+        const { data: ouvidorData, error } = await supabase
+          .from("ouvidor") 
+          .select("nome_responsavel")
+          .single();
+        
+        if (error) {
+            // Tratamento de erro na busca do ouvidor ou erros de conexão/inesperados
+            console.warn("Aviso ao buscar ouvidor:", error.message);
+            setNomeOuvidor("Responsável pela Ouvidoria");
+        } else if (ouvidorData) {
+            setNomeOuvidor(ouvidorData.nome_responsavel);
+        } else {
+            setNomeOuvidor("Responsável pela Ouvidoria");
+        }
+      } catch (error) {
+        console.error("Erro inesperado ao buscar ouvidor:", error);
+        setNomeOuvidor("Responsável pela Ouvidoria");
+      }
     };
-    fetchOpcoes();
+
+    fetchDadosIniciais();
   }, []);
 
   const aplicarFiltros = () => {
@@ -61,17 +73,15 @@ const BuscaRelatorio = ({ filtrar }) => {
     filtrar({ protocolo, vereador, tipo, status, dataInicial, dataFinal, assunto});
   };
 
-
-  
-  //Função principal para gerar o PDF
-  const gerarPDF = async () => {
+  // FUNÇAO PARA GERAR PDF 
+  const gerarPDF = async (tipoRelatorio) => {
     setIsGerandoPDF(true);
-    setMensagemFeedback("Gerando relatório... Isso pode levar alguns segundos.");
+    setMensagemFeedback(`Gerando relatório ${tipoRelatorio === 'publico' ? 'Público' : 'Geral'}... Aguarde.`);
 
     try {
-     
+      const tabela = "solicitacoes"; 
       let query = supabase
-        .from("solicitacoes")
+        .from(tabela) 
         .select(`
           id,
           protocolo,
@@ -81,29 +91,37 @@ const BuscaRelatorio = ({ filtrar }) => {
           created_at,
           status,
           assunto,
+          descricao, 
           vereadores ( nome_completo )
         `);
 
-      // Aplicar os mesmos filtros da busca
+      // Aplicar filtros
       if (protocolo) query = query.ilike("protocolo", `%${protocolo}%`);
       if (vereador) query = query.eq("id_vereador_destino", vereador);
       if (tipo) query = query.eq("tipo", tipo);
       if (status) query = query.eq("status", status);
       if (dataInicial && dataFinal) {
+        // Ajuste para pegar o dia final completo
+        const dataFinalAjustada = new Date(dataFinal);
+        dataFinalAjustada.setDate(dataFinalAjustada.getDate() + 1);
         query = query.gte("created_at", dataInicial);
-        query = query.lte("created_at", dataFinal);
+        query = query.lt("created_at", dataFinalAjustada.toISOString());
+      } else if (dataInicial) {
+         query = query.gte("created_at", dataInicial);
+      } else if (dataFinal) {
+         const dataFinalAjustada = new Date(dataFinal);
+         dataFinalAjustada.setDate(dataFinalAjustada.getDate() + 1);
+         query = query.lt("created_at", dataFinalAjustada.toISOString());
       }
-     if (assunto) query = query.ilike("assunto", `%${assunto}%`);
 
-      // Ordenar, mas SEM paginar (.range())
+      if (assunto) query = query.ilike("assunto", `%${assunto}%`);
+
+      // Ordenar por data
       query = query.order("created_at", { ascending: false });
 
-      // Executar a query para o PDF
       const { data, error } = await query;
 
-      if (error) {
-        throw new Error(error.message);
-      }
+      if (error) throw new Error(error.message);
 
       if (!data || data.length === 0) {
         setMensagemFeedback("Nenhum dado encontrado para os filtros selecionados.");
@@ -111,57 +129,97 @@ const BuscaRelatorio = ({ filtrar }) => {
         return;
       }
 
+      // Configuração do PDF
+      const isPublico = tipoRelatorio === "publico";
       
-      setMensagemFeedback(`Encontrados ${data.length} registros. Compilando PDF...`);
+      // Público = Retrato | Geral = Paisagem
+      const doc = new jsPDF({ orientation: isPublico ? "portrait" : "landscape" });
 
-      const doc = new jsPDF({ orientation: "landscape" }); // 'landscape' (paisagem) é melhor para tabelas largas
-
-      // Título
+      // Título e Cabeçalho
+      const tituloRelatorio = isPublico ? "Relatório Público de Transparência" : "Relatório Geral Administrativo";
+      const corCabecalho = isPublico ? [46, 204, 113] : [13, 109, 253]; 
       doc.setFontSize(16);
-      doc.text("Relatório de Manifestações", 14, 22);
+      doc.text(tituloRelatorio, 14, 22);
+      
       doc.setFontSize(10);
-      doc.text(`Total de registros: ${data.length}`, 14, 28);
-      doc.text(`Ouvidor responsável: ${ouvidor?.nome_responsavel || "Não informado"}`, 14, 39);
-      doc.text(`Gerado em: ${new Date().toLocaleString("pt-BR")}`, 14, 34);
+      // Exibe informações buscado no banco
+      doc.text(`Ouvidor Responsável: ${nomeOuvidor}`, 14, 28);
+      doc.text(`Total de registros: ${data.length}`, 14, 34);
+      doc.text(`Gerado em: ${new Date().toLocaleString("pt-BR")}`, 14, 40);
+      
+      let startY = 45;
 
-      // Definir colunas
-      const colunas = [
-        { header: "Protocolo", dataKey: "protocolo" },
-        { header: "Data", dataKey: "data_formatada" },
-        { header: "Nome", dataKey: "nome_formatado" },
-        { header: "Tipo", dataKey: "tipo" },
-        { header: "Vereador", dataKey: "vereador_formatado" },
-        { header: "Status", dataKey: "status" },
-        { header: "assunto", dataKey: "assunto" },
-      ];
+      if (isPublico) {
+        doc.setFontSize(8);
+        doc.setTextColor(100);
+        doc.text("* Este relatório não contém dados pessoais sensíveis, conforme LGPD.", 14, 46);
+        startY = 50;
+      } else {
+         doc.setTextColor(0);
+      }
 
-      // Formatar os dados para a tabela
-      const dadosFormatados = data.map(item => ({
-        ...item,
-        data_formatada: new Date(item.created_at).toLocaleString("pt-BR"),
-        nome_formatado: item.is_anonimo ? "Anônimo" : item.solicitante_nome || "Anônimo",
-        vereador_formatado: item.vereadores?.nome_completo || "N/D",
-      }));
+      // Definição de Colunas e Dados
+      let colunas = [];
+      let dadosFormatados = [];
 
-      // Criar a tabela 
+      if (isPublico) {
+        // RELATÓRIO PÚBLICO (Dados limitados)
+        colunas = [
+          { header: "Data", dataKey: "data_formatada" },
+          { header: "Tipo", dataKey: "tipo" },
+          { header: "Status", dataKey: "status" },
+          { header: "Vereador Destino", dataKey: "vereador_formatado" },
+        ];
+
+        dadosFormatados = data.map(item => ({
+          data_formatada: new Date(item.created_at).toLocaleDateString("pt-BR"),
+          tipo: item.tipo,
+          status: item.status,
+          vereador_formatado: item.vereadores?.nome_completo || "N/D",
+        }));
+
+      } else {
+        // RELATÓRIO GERAL (Completo)
+        colunas = [
+          { header: "Protocolo", dataKey: "protocolo" },
+          { header: "Data", dataKey: "data_formatada" },
+          { header: "Nome", dataKey: "nome_formatado" },
+          { header: "Tipo", dataKey: "tipo" },
+          { header: "Vereador", dataKey: "vereador_formatado" },
+          { header: "Status", dataKey: "status" },
+          { header: "Assunto", dataKey: "assunto" },
+        ];
+
+        dadosFormatados = data.map(item => ({
+          protocolo: item.protocolo,
+          data_formatada: new Date(item.created_at).toLocaleString("pt-BR"),
+          nome_formatado: item.is_anonimo ? "Anônimo" : item.solicitante_nome || "Anônimo",
+          tipo: item.tipo,
+          vereador_formatado: item.vereadores?.nome_completo || "N/D",
+          status: item.status,
+          assunto: item.assunto || "Sem assunto",
+        }));
+      }
+
+      // Função Gerar Tabela 
       autoTable(doc, {
         columns: colunas,
         body: dadosFormatados,
-        startY: 40, // Posição inicial (abaixo dos títulos)
+        startY: startY,
         theme: 'striped',
-        headStyles: { fillColor: [13, 109, 253] }, // Um azul (R, G, B)
-        columnStyles: {
-          assunto: { cellWidth: 80 } // Quebra de linha para a coluna de mensagem
-        }
+        headStyles: { fillColor: corCabecalho },
+        styles: { fontSize: isPublico ? 10 : 9 },
       });
 
-      // Salvar o arquivo
-      doc.save("relatorio_manifestacoes.pdf");
-      setMensagemFeedback(""); // Limpa a mensagem
+      // Função Salvar Relatório
+      const nomeArquivo = isPublico ? "relatorio_publico.pdf" : "relatorio_geral_admin.pdf";
+      doc.save(nomeArquivo);
+      
+      setMensagemFeedback(`Relatório ${isPublico ? 'Público' : 'Geral'} gerado com sucesso!`);
 
     } catch (err) {
       console.error("Erro ao gerar PDF:", err);
-      setMensagemFeedback(`Erro ao gerar PDF: ${err.message}`);
+      setMensagemFeedback(`Erro: ${err.message}`);
     } finally {
       setIsGerandoPDF(false);
     }
@@ -171,101 +229,83 @@ const BuscaRelatorio = ({ filtrar }) => {
     <div className="bg-white shadow-md rounded-lg p-6 mb-6 mt-10">
       <h2 className="text-xl font-semibold mb-4">Busca e Relatórios</h2>
 
-     
       {mensagemFeedback && (
         <div 
-          className={`p-4 mb-4 rounded-md ${
+          className={`p-3 mb-4 rounded-md text-sm font-medium ${
             mensagemFeedback.startsWith("Erro") 
-              ? "bg-red-100 border border-red-400 text-red-700" 
-              : "bg-blue-100 border border-blue-400 text-blue-700"
+              ? "bg-red-100 text-red-700 border border-red-200" 
+              : "bg-blue-100 text-blue-700 border border-blue-200"
           }`}
         >
           {mensagemFeedback}
         </div>
       )}
 
-     
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-        <input
-          type="text"
-          placeholder="Protocolo"
-          value={protocolo}
-          onChange={(e) => setProtocolo(e.target.value)}
-          className="border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-        />
-        <input
-          type="text"
-          placeholder="Assunto"
-          value={assunto}
-          onChange={(e) => setAssunto(e.target.value)}
-          className="border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-        />
-        <select
-          value={vereador}
-          onChange={(e) => setVereador(e.target.value)}
-          className="border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-        >
+      {/* Filtros */}
+      <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-3">
+        <input type="text" placeholder="Protocolo" value={protocolo} onChange={(e) => setProtocolo(e.target.value)} className="border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none" />
+        
+        <select value={vereador} onChange={(e) => setVereador(e.target.value)} className="border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none">
           <option value="">Todos os vereadores</option>
-          {vereadoresOpcoes.map((v) => (
-            <option key={v.id} value={v.id}>
-              {v.nome_completo}
-            </option>
-          ))}
+          {vereadoresOpcoes.map((v) => <option key={v.id} value={v.id}>{v.nome_completo}</option>)}
         </select>
-        <select
-          value={tipo}
-          onChange={(e) => setTipo(e.target.value)}
-          className="border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-        >
+
+        <select value={tipo} onChange={(e) => setTipo(e.target.value)} className="border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none">
           <option value="">Todos os tipos</option>
-          {tiposManifestacao.map((t) => (
-            <option key={t} value={t}>
-              {t}
-            </option>
-          ))}
+          {tiposManifestacao.map((t) => <option key={t} value={t}>{t}</option>)}
         </select>
-        <select
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-          className="border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-        >
+
+        <select value={status} onChange={(e) => setStatus(e.target.value)} className="border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none">
           <option value="">Todos os status</option>
           <option value="Pendente">Pendente</option>
           <option value="Em análise">Em análise</option>
           <option value="Finalizado">Finalizado</option>
         </select>
-         
-        <input
-          type="date"
-          value={dataInicial}
-          onChange={(e) => setDataInicial(e.target.value)}
-          className="border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-        />
-        <input
-          type="date"
-          value={dataFinal}
-          onChange={(e) => setDataFinal(e.target.value)}
-          className="border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-        />
-       
+
+        <input type="text" placeholder="Assunto" value={assunto} onChange={(e) => setAssunto(e.target.value)} className="border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none" />
+        
+        <div className="flex flex-col">
+            <span className="text-xs text-gray-500 mb-1 ml-1">De:</span>
+            <input type="date" value={dataInicial} onChange={(e) => setDataInicial(e.target.value)} className="border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none w-full" />
+        </div>
+
+        <div className="flex flex-col">
+            <span className="text-xs text-gray-500 mb-1 ml-1">Até:</span>
+            <input type="date" value={dataFinal} onChange={(e) => setDataFinal(e.target.value)} className="border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none w-full" />
+        </div>
+
       </div>
 
-      <div className="flex justify-end mt-3 gap-2">
+      {/* Botões de Ação */}
+      <div className="flex flex-wrap justify-end mt-6 gap-3 border-t pt-4">
+        
+        {/* Botão Buscar (Principal) */}
         <button
           onClick={aplicarFiltros}
-          className="bg-green-700 text-white font-semibold px-6 py-2 rounded-md shadow hover:bg-green-800 transition w-full sm:w-auto disabled:opacity-50 disabled:cursor-wait"
           disabled={isGerandoPDF}
+          className="flex items-center gap-2 bg-blue-600 text-white font-semibold px-6 py-2 rounded-md shadow hover:bg-blue-700 transition disabled:opacity-50"
         >
-          Buscar
+          <FaSearch /> Buscar
         </button>
 
-       
+        <div className="w-px bg-gray-300 mx-2 hidden md:block"></div> {/* Separador visual */}
+
+        {/* Botão Relatório GERAL */}
         <button 
-          onClick={gerarPDF}
+          onClick={() => gerarPDF("geral")}
           disabled={isGerandoPDF}
-          className="bg-blue-700 text-white font-semibold px-6 py-2 rounded-md shadow hover:bg-blue-800 transition w-full sm:w-auto disabled:opacity-50 disabled:cursor-wait"
+          className="flex items-center gap-2 bg-gray-700 text-white font-semibold px-4 py-2 rounded-md shadow hover:bg-gray-800 transition disabled:opacity-50"
         >
-          {isGerandoPDF ? "Gerando..." : "Relatório"}
+          <FaFilePdf /> {isGerandoPDF ? "Gerando..." : "Relatório Geral"}
+        </button>
+
+        {/* Botão Relatório PÚBLICO */}
+        <button 
+          onClick={() => gerarPDF("publico")}
+          disabled={isGerandoPDF}
+          className="flex items-center gap-2 bg-green-600 text-white font-semibold px-4 py-2 rounded-md shadow hover:bg-green-700 transition disabled:opacity-50"
+        >
+          <FaGlobeAmericas /> {isGerandoPDF ? "Gerando..." : "Relatório Público"}
         </button>
       </div>
     </div>
@@ -273,4 +313,3 @@ const BuscaRelatorio = ({ filtrar }) => {
 };
 
 export default BuscaRelatorio;
-

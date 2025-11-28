@@ -1,4 +1,3 @@
-// src/pages/Admin/Vereadores/PerfilVereadores.js
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../../supabaseClient";
@@ -8,9 +7,18 @@ import Paginacao from "../../../components/Paginacao";
 import NavBar from "../../../components/NavBar";
 
 const PerfilVereadores = () => {
+  // Estados dos inputs 
   const [nome, setNome] = useState("");
   const [legislatura, setLegislatura] = useState("");
-  const [situacao, setSituacao] = useState(""); // "" significa sem filtro
+  const [situacao, setSituacao] = useState(""); 
+  
+  // Estado dos filtros aplicados 
+  const [filtrosAtivos, setFiltrosAtivos] = useState({
+    nome: "",
+    legislatura: "",
+    situacao: ""
+  });
+
   const [vereadores, setVereadores] = useState([]);
   const [legislaturas, setLegislaturas] = useState([]);
   const [carregando, setCarregando] = useState(false);
@@ -22,8 +30,9 @@ const PerfilVereadores = () => {
 
   const navigate = useNavigate();
 
-  // Busca vereadores com filtros
-  const fetchVereadores = useCallback(async (filtroNome = "", filtroLegislatura = "", filtroSituacao = "", offsetAtual = 0) => {
+  // Buscar vereadores com filtros
+  const fetchVereadores = useCallback(
+    async (filtros, offsetAtual) => {
       setCarregando(true);
       setErro(null);
 
@@ -35,16 +44,17 @@ const PerfilVereadores = () => {
             { count: "exact" }
           );
 
-        if (filtroNome.trim() !== "") {
-          query = query.ilike("nome_completo", `%${filtroNome.trim()}%`);
+        // Usa os filtros passados como argumento
+        if (filtros.nome.trim() !== "") {
+          query = query.ilike("nome_completo", `%${filtros.nome.trim()}%`);
         }
 
-        if (filtroLegislatura !== "") {
-          query = query.eq("legislatura", filtroLegislatura);
+        if (filtros.legislatura !== "") {
+          query = query.eq("legislatura", filtros.legislatura);
         }
 
-        if (filtroSituacao !== "") {
-          query = query.eq("situacao", filtroSituacao);
+        if (filtros.situacao !== "") {
+          query = query.eq("situacao", filtros.situacao);
         }
 
         query = query.order("nome_completo", { ascending: true })
@@ -77,7 +87,6 @@ const PerfilVereadores = () => {
 
       if (error) throw error;
 
-      // Remove duplicados e ordena
       const legislaturasUnicas = Array.from(new Set(data.map(v => v.legislatura))).sort();
       setLegislaturas(legislaturasUnicas);
     } catch (err) {
@@ -86,18 +95,25 @@ const PerfilVereadores = () => {
     }
   };
 
-  // Executa ao carregar a página
+  // Carrega legislaturas ao iniciar
   useEffect(() => {
     fetchLegislaturas();
-    fetchVereadores(nome, legislatura, situacao, offset);
-  }, [offset, fetchVereadores]);
+  }, []);
 
-  const aplicarFiltros = () => {
-    setOffset(0);
-    fetchVereadores(nome, legislatura, situacao, 0);
-  };
-
+  // Dispara quando offset muda OU quando filtrosAtivos mudam
+  useEffect(() => {
+    fetchVereadores(filtrosAtivos, offset);
+  }, [offset, filtrosAtivos, fetchVereadores]); 
   
+  const aplicarFiltros = () => {
+    setOffset(0); // Reseta paginação
+    // Atualiza os filtros ativos com o que está nos inputs. 
+    setFiltrosAtivos({
+        nome, 
+        legislatura, 
+        situacao
+    });
+  };
 
   return (
     <ProtecaoAdmin>
@@ -168,7 +184,7 @@ const PerfilVereadores = () => {
                 >
                   Buscar
                 </button>
-               
+                
                 <button
                   onClick={() => navigate("/admin/vereadores/cadastro")}
                   className="bg-green-600 text-white font-semibold px-6 py-2 rounded-md shadow hover:bg-green-700 transition ml-auto"
@@ -210,7 +226,7 @@ const PerfilVereadores = () => {
                           <td className="px-4 py-2">{v.partido}</td>
                           <td className="px-4 py-2">{v.email_contato}</td>
                           <td className="px-4 py-2">{v.legislatura ?? "—"}</td>
-                          <td className="px-4 py-2">{v.situacao ?? "—"}</td>
+                          <td className="px-4 py-2">{v.situacao ? v.situacao.replace(/'/g, "") : "—"}</td>
                           <td className="px-4 py-2 text-center">
                             <button
                               onClick={() => navigate(`/admin/vereadores/cadastro/${v.id}`)}

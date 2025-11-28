@@ -21,8 +21,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path='login' element={<Login />} />
-
+      
         {/* Rotas protegidas */}
         <Route path='admin' element={<ProtecaoAdmin> <AreaAdmin /> </ProtecaoAdmin>} />
         <Route path='admin/manifestacao/:protocolo' element={<ProtecaoAdmin> <VerDetalhes /> </ProtecaoAdmin>} />
@@ -34,10 +33,12 @@ function App() {
         {/* Rotas públicas */}
         <Route path="denuncia" element={<DenunciaForm />} />
         <Route path="consulta" element={<ConsultaProtocolo />} />
+        <Route path='login' element={<Login />} />
         <Route path="/" element={<HomePage />} />
 
         {/* Rota não encontrada */}
         <Route path='*' element={<NotFound />} />
+        
       </Routes>
     </BrowserRouter>
   );

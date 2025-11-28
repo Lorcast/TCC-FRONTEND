@@ -3,7 +3,6 @@ import { supabase } from "../supabaseClient";
 
 const Footer = () => {
   const [info, setInfo] = useState(null);
-
   const [stats, setStats] = useState({
     total: 0,
     denuncia: 0,
@@ -71,7 +70,7 @@ const Footer = () => {
           
           <div className="bg-gray-800 p-5 rounded-lg shadow-md">
             <h3 className="text-lg font-semibold text-white mb-4">
-              manifestações da Ouvidoria
+              Manifestação da Ouvidoria
             </h3>
             <ul className="text-sm space-y-2">
               <li><b>Total:</b> {stats.total}</li>
@@ -88,6 +87,7 @@ const Footer = () => {
          <div className="mt-12 flex justify-center">
           <img
             src="/logoOuvir.png"    
+            
             alt="Logo"
             className="w-40 opacity-90 hover:opacity-100 transition"
           />

@@ -15,7 +15,7 @@ const Login = () => {
   const { login, loading, authError, user } = useAuth(); // pq esse não passa um paraemtro?
   const navigate = useNavigate();
 
-  // useEffect pode ser mantido ou removido, mas não será usado se ProtecaoLogin redirecionar
+
   useEffect(() => {
     if (user) {
       navigate("/admin", { replace: true }); 
@@ -54,10 +54,9 @@ const Login = () => {
 
     if (usuarioLogado) {
       setMensagemSucesso("Login realizado com sucesso! Redirecionando...");
-     
       setTimeout(() => {
         navigate("/admin", { replace: true });
-      }, 1500);
+      }, 1500); 
     }
   };
 
@@ -85,7 +84,7 @@ const Login = () => {
             <label htmlFor="email-input" className="block font-medium mb-1">
               E-mail <span className="text-red-600">*</span>
             </label>
-            <input
+             <input
               id="email-input"
               type="email"
               name="email"
