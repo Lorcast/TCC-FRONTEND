@@ -14,8 +14,6 @@ const BuscaRelatorio = ({ filtrar }) => {
   const [assunto, setAssunto] = useState("");
   const [ouvidor, setOuvidor] = useState(null);
   
-
-  
   // Novos estados para controle do PDF
   const [isGerandoPDF, setIsGerandoPDF] = useState(false); //evita cliques repetidos e mostra estado "gerando".
   const [mensagemFeedback, setMensagemFeedback] = useState(""); 
@@ -63,6 +61,8 @@ const BuscaRelatorio = ({ filtrar }) => {
     filtrar({ protocolo, vereador, tipo, status, dataInicial, dataFinal, assunto});
   };
 
+
+  
   //Função principal para gerar o PDF
   const gerarPDF = async () => {
     setIsGerandoPDF(true);

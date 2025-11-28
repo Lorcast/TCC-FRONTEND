@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import jsPDF from "jspdf";
+import { supabase } from "../supabaseClient";
+
 
 const RelatorioVerDetalhes = ({ manifestacao, vereadorNome, ouvidorNome }) => {
   const [isGerandoPDF, setIsGerandoPDF] = useState(false);
@@ -18,6 +20,26 @@ const RelatorioVerDetalhes = ({ manifestacao, vereadorNome, ouvidorNome }) => {
     } catch (e) {
       console.error("Erro ao formatar data_resposta:", dataISO, e);
       return null;
+    }
+  };
+  const downloadArquivo = async (anexo) => {
+   try {
+      const { data, error } = await supabase.storage
+        .from("anexos-ouvidoria")
+        .download(anexo.caminho_arquivo);
+
+      if (error) throw error;
+
+      const url = URL.createObjectURL(data);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = anexo.nome_original || "anexo";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Erro ao baixar anexo:", err);
     }
   };
 
@@ -100,6 +122,10 @@ const RelatorioVerDetalhes = ({ manifestacao, vereadorNome, ouvidorNome }) => {
 
       // --- Salvar PDF ---
       doc.save(`manifestacao_${manifestacao.protocolo}.pdf`);
+
+      if(manifestacao.anexos?.length>0) {
+        manifestacao.anexos.forEach(downloadArquivo);
+      }
     } catch (err) {
       console.error("Erro ao gerar PDF:", err);
     } finally {
@@ -114,7 +140,7 @@ const RelatorioVerDetalhes = ({ manifestacao, vereadorNome, ouvidorNome }) => {
       disabled={isGerandoPDF}
       className="bg-blue-700 text-white font-semibold px-6 py-2 rounded-md shadow hover:bg-blue-800 transition w-full sm:w-auto disabled:opacity-50 disabled:cursor-wait"
     >
-      {isGerandoPDF ? "Gerando PDF..." : "Gerar Relatório PDF"}
+      {isGerandoPDF ? "Gerando PDF..." : "Gerar Relatório PDF e Baixar Anexos"}
     </button>
   );
 };

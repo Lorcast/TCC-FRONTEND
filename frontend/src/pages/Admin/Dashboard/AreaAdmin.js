@@ -63,7 +63,8 @@ const AreaAdmin = () => {
 
     if (filtros.assunto) query = query.ilike("assunto", `%${filtros.assunto}%`);
 
-    query = query.order("created_at", { ascending: false }).range(offsetAtual, offsetAtual + limite - 1);
+    query = query.order("created_at", { ascending: false })
+                 .range(offsetAtual, offsetAtual + limite - 1);
 
     const { data, count, error } = await query;
 
@@ -92,7 +93,7 @@ const AreaAdmin = () => {
           <BuscaRelatorio
             filtrar={(filtros) => {
               setFiltrosAtuais(filtros);
-              setOffset(0); // reseta a paginação ao filtrar
+              setOffset(0); 
             }}
           />
 

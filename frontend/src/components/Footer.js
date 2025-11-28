@@ -18,7 +18,7 @@ const Footer = () => {
       const { data } = await supabase
         .from("ouvidor")
         .select("*")
-        .eq("id", 1)
+        .eq("id", 2)
         .single();
 
       setInfo(data);
@@ -63,6 +63,8 @@ const Footer = () => {
               <li><b>Responsável:</b> {info.nome_responsavel}</li>
               <li><b>Setor:</b> {info.setor}</li>
               <li><b>Localização:</b> {info.localizacao}</li>
+              <li><b>Telefone:</b> {info.telefone_ouvidor}</li>
+              <li><b>Horário:</b> {info.horario_atendimento}</li>
             </ul>
           </div>
 

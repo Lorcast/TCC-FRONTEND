@@ -22,7 +22,7 @@ const CadastrarVereadores = () => {
   const [mensagemSucesso, setMensagemSucesso] = useState(null);
   const [mensagemErro, setMensagemErro] = useState(null);
 
-  const validateEmail = (email) => {
+  const validaremail = (email) => {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return regex.test(email);
   };
@@ -42,12 +42,12 @@ const CadastrarVereadores = () => {
         if (error) throw error;
 
         if (data) {
-          // Limpa aspas extras na situacao, se houver
+          // Limpa aspas extras na situacao, se houvers
           const situacaoTratada = data.situacao ? data.situacao.replace(/'/g, "") : "";
           setForm({ ...data, situacao: situacaoTratada });
         }
       } catch (error) {
-        console.error("Erro ao carregar vereador:", error);
+        console.error("Erro ao carregar vereador:", error);//precis ter isso
         setMensagemErro("Erro ao carregar dados do vereador.");
       }
     };
@@ -63,7 +63,7 @@ const CadastrarVereadores = () => {
 if (name === "email_contato") {
       setForm((prev) => ({ ...prev, [name]: value }));
 
-      if (!validateEmail(value)) {
+      if (!validaremail(value)) {
         setErros((prev) => ({
           ...prev,
           email_contato: "Digite um e-mail válido."
@@ -83,7 +83,7 @@ if (name === "email_contato") {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // pq tem isso?
     setCarregando(true);
     setErros({});
     setMensagemErro(null);
@@ -104,6 +104,7 @@ if (name === "email_contato") {
       return;
     }
 
+    // envio para o supabase 
     try {
       if (id) {
         const { error } = await supabase

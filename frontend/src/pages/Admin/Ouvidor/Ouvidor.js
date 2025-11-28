@@ -16,7 +16,7 @@ const Ouvidor = () => {
       const { data, error } = await supabase
         .from("ouvidor")
         .select("*")
-        .eq("id", 1)
+        .eq("id", 2)
         .single();
 
       if (error) {
@@ -56,7 +56,7 @@ const Ouvidor = () => {
           <p className="text-red-600 text-center mb-4">{mensagemErro}</p>
         )}
 
-        {/* CARD COM AS INFORMAÇÕES */}
+        
         {!carregando && info && (
           <div className="space-y-4">
 
@@ -73,11 +73,24 @@ const Ouvidor = () => {
                 {info.setor || "Não informado"}
               </p>
             </div>
+            <div>
+              <label className="block text-gray-700 font-medium">Telefone</label>
+              <p className="p-2 bg-gray-100 rounded border">
+                {info.telefone_ouvidor || "Não informado"}
+              </p>
+            </div>
 
             <div>
               <label className="block text-gray-700 font-medium">Localização</label>
               <p className="p-2 bg-gray-100 rounded border">
                 {info.localizacao || "Não informado"}
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-gray-700 font-medium">Horário</label>
+              <p className="p-2 bg-gray-100 rounded border">
+                {info.horario_atendimento || "Não informado"}
               </p>
             </div>
 

@@ -235,7 +235,7 @@ const VerDetalhes = () => {
             )}
           </div>
             <div>
-          <label className="block font-medium mb-1">Anexo (Vereador)</label>
+          <label className="block font-medium mb-1">Anexo (Ouvidor)</label>
           <input
             id="anexo-input"
             type="file"

@@ -12,13 +12,13 @@ const Login = () => {
 
   const [mensagemSucesso, setMensagemSucesso] = useState("");
   const [erros, setErros] = useState({});
-  const { login, loading, authError, user } = useAuth();
+  const { login, loading, authError, user } = useAuth(); // pq esse não passa um paraemtro?
   const navigate = useNavigate();
 
   // useEffect pode ser mantido ou removido, mas não será usado se ProtecaoLogin redirecionar
   useEffect(() => {
     if (user) {
-      navigate("/admin", { replace: true }); // Redireciona para admin se já estiver logado
+      navigate("/admin", { replace: true }); 
     }
   }, [user, navigate]);
 
@@ -54,10 +54,10 @@ const Login = () => {
 
     if (usuarioLogado) {
       setMensagemSucesso("Login realizado com sucesso! Redirecionando...");
-      // Caso o login seja realizado com sucesso, o redirecionamento ocorre aqui.
+     
       setTimeout(() => {
         navigate("/admin", { replace: true });
-      }, 1500); // Pode ser ajustado conforme necessidade
+      }, 1500);
     }
   };
 

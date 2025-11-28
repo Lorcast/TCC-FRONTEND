@@ -167,7 +167,7 @@ const validarCPF = (cpf) => {
     setIsSubmitting(true);
 
     try {
-      // --- Upload do anexo ---
+      // Upload do anexo 
       let caminhoAnexo = null;
       if (formManifestacao.anexos) {
         const file = formManifestacao.anexos;
@@ -187,7 +187,7 @@ const validarCPF = (cpf) => {
         caminhoAnexo = filePath;
       }
 
-      // --- Inserção da manifestação ---
+      // Inserção da manifestação
       const dadosParaSalvar = {
         id_vereador_destino: formManifestacao.vereador,
         tipo: formManifestacao.tipoManifestacao,
@@ -219,7 +219,7 @@ const validarCPF = (cpf) => {
 
       const novoId = solicitacao.id;
 
-      // --- Geração de protocolo ---
+      // Geração de protocolo
       const hoje = new Date();
       const dia = String(hoje.getDate()).padStart(2, "0");
       const mes = String(hoje.getMonth() + 1).padStart(2, "0");

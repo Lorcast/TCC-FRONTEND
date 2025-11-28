@@ -23,8 +23,7 @@ const PerfilVereadores = () => {
   const navigate = useNavigate();
 
   // Busca vereadores com filtros
-  const fetchVereadores = useCallback(
-    async (filtroNome = "", filtroLegislatura = "", filtroSituacao = "", offsetAtual = 0) => {
+  const fetchVereadores = useCallback(async (filtroNome = "", filtroLegislatura = "", filtroSituacao = "", offsetAtual = 0) => {
       setCarregando(true);
       setErro(null);
 
