@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { GoArrowLeft } from "react-icons/go";
 import { supabase } from "../../../supabaseClient";
-import jsPDF from "jspdf";
+import RelatorioVerDetalhes from "../../../components/RelatorioVerDetalhes";
 
 const VerDetalhes = () => {
   const [carregando, setCarregando] = useState(false);
@@ -13,33 +13,24 @@ const VerDetalhes = () => {
   const [enviando, setEnviando] = useState(false);
   const [mensagem, setMensagem] = useState("");
   const [respostaVazia, setRespostaVazia] = useState(false);
-  const [isGerandoPDF, setIsGerandoPDF] = useState(false);
-
-  // Arquivo de resposta
-  const [arquivoResposta, setArquivoResposta] = useState(null);
-
+  const [ouvidor, setOuvidor] = useState(null);
   const { protocolo } = useParams();
   const respostaRef = useRef(null);
   const navigate = useNavigate();
+const [arquivoResposta, setArquivoResposta] = useState(null);
+ const handleFileChange = (e) => {
+  const file = e.target.files[0];
 
-  const formatarCPF = (cpf) => {
-    if (!cpf) return "Não informado";
-    return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
-  };
-
-  // Função para lidar com a seleção do arquivo
-  const handleArquivoRespostaChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-        if (file.size > 50 * 1024 * 1024) {
-            alert("Arquivo muito grande (Máx 50MB)");
-            e.target.value = "";
-            setArquivoResposta(null);
-            return;
-        }
-        setArquivoResposta(file);
+  if (file) {
+    if (file.size > 50 * 1024 * 1024) {
+      alert("Arquivo muito grande (máx. 50MB)");
+      e.target.value = "";
+      setArquivoResposta(null);
+      return;
     }
-  };
+    setArquivoResposta(file);
+  }
+};
 
   const fetchManifestacao = useCallback(async () => {
     if (!protocolo) {
@@ -50,14 +41,11 @@ const VerDetalhes = () => {
     setCarregando(true);
     setError(null);
     try {
-      const { data: dadosManifestacao, error: fetchError } = await supabase
-        .from("vw_solicitacoes_admin")
+      const { data, error: fetchError } = await supabase
+        .from("solicitacoes")
         .select(`
-          id,
           tipo,
           solicitante_nome,
-          solicitante_cpf,
-          solicitante_contato,
           protocolo,
           created_at,
           status,
@@ -65,303 +53,343 @@ const VerDetalhes = () => {
           descricao,
           resposta_admin,
           data_resposta,
-          id_vereador_destino
+          id_vereador_destino,
+          solicitante_contato,
+          solicitante_cpf,
+          anexos ( caminho_arquivo, nome_original, arquivo_resposta )
         `)
         .eq("protocolo", protocolo)
         .single();
 
-      if (fetchError) throw fetchError;
+      if (fetchError) {
+        if (fetchError.code === 'PGRST116') {
+          setError("Manifestação não encontrada.");
+          setManifestacao(null);
+        } else {
+          throw fetchError;
+        }
+      } else if (data) {
+        if (data.status === "Pendente") {
+          const { error: updateError } = await supabase
+            .from("solicitacoes")
+            .update({ status: "Em análise" })
+            .eq("protocolo", protocolo);
+          if (updateError) console.error("Erro ao atualizar status:", updateError);
+          else data.status = "Em análise";
+        }
 
-      const { data: dadosAnexos, error: errorAnexos } = await supabase
-        .from('anexos')
-        .select('caminho_arquivo, nome_original, arquivo_resposta')
-        .eq('id_solicitacao', dadosManifestacao.id);
+        setManifestacao(data);
+        setRespostaAdminInput(data.resposta_admin || "");
 
-      if (errorAnexos) console.error("Erro anexos:", errorAnexos);
-
-      const data = { ...dadosManifestacao, anexos: dadosAnexos || [] };
-
-      if (data.status === "Pendente") {
-        await supabase.from("solicitacoes").update({ status: "Em análise" }).eq("id", data.id);
-        data.status = "Em análise";
-      }
-
-      setManifestacao(data);
-      setRespostaAdminInput(data.resposta_admin || "");
-
-      if (data.id_vereador_destino) {
-          const { data: vData } = await supabase.from("vereadores").select("nome_completo").eq("id", data.id_vereador_destino).single();
-          setVereadorNome(vData?.nome_completo || "Não informado");
-      } else {
+        if (data.id_vereador_destino) {
+          const { data: vereadorData, error: vereadorError } = await supabase
+            .from("vereadores")
+            .select("nome_completo")
+            .eq("id", data.id_vereador_destino)
+            .single();
+          if (vereadorError) {
+            console.error("Erro ao buscar vereador:", vereadorError);
+            setVereadorNome("Erro ao buscar");
+          } else {
+            setVereadorNome(vereadorData?.nome_completo ?? "Não informado");
+          }
+        } else {
           setVereadorNome("Não direcionado");
+        }
+      } else {
+        setError("Manifestação não encontrada.");
+        setManifestacao(null);
       }
-
     } catch (err) {
-      setError(err.message || "Erro ao carregar.");
+      console.error("Erro detalhado ao buscar manifestação:", err);
+      setError(err.message || "Ocorreu um erro ao carregar a manifestação.");
+      setManifestacao(null);
     } finally {
       setCarregando(false);
     }
   }, [protocolo]);
+ const fetchOuvidor = async () => {
+    const { data } = await supabase
+      .from("ouvidor")
+      .select("*")
+      .limit(1)
+      .single();
 
+    setOuvidor(data || null);
+  };
   useEffect(() => {
+    fetchOuvidor();
     fetchManifestacao();
   }, [fetchManifestacao]);
 
   const formatarDataHoraResposta = (dataISO) => {
     if (!dataISO) return null;
     try {
-        const d = new Date(dataISO);
-        return `Respondido em ${d.toLocaleDateString('pt-BR')} às ${d.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}`;
-    } catch (e) { return null; }
-  };
-
-  const enviarResposta = async () => {
-    const respostaDigitada = respostaAdminInput.trim();
-
-    if (!respostaDigitada) {
-      setMensagem("Escreva uma resposta.");
-      setRespostaVazia(true);
-      respostaRef.current?.scrollIntoView({ behavior: "smooth" });
-      return;
-    }
-
-    setMensagem("");
-    setRespostaVazia(false);
-    setEnviando(true);
-
-    try {
-      const agora = new Date();
-
-      const { data: updatedData, error: updateError } = await supabase
-        .from("solicitacoes")
-        .update({
-          resposta_admin: respostaDigitada,
-          data_resposta: agora.toISOString(),
-          status: "Finalizado"
-        })
-        .eq("protocolo", protocolo)
-        .select()
-        .single();
-
-      if (updateError) throw updateError;
-
-      if (arquivoResposta) {
-          const file = arquivoResposta;
-          const safeFileName = file.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, '-');
-          const filePath = `respostas/${protocolo}-${Date.now()}-${safeFileName}`;
-
-          const { error: uploadError } = await supabase.storage
-            .from('anexos-ouvidoria')
-            .upload(filePath, file);
-
-          if (uploadError) throw uploadError;
-
-          await supabase.from('anexos').insert({
-              id_solicitacao: updatedData.id,
-              caminho_arquivo: filePath,
-              nome_original: file.name,
-              arquivo_resposta: true
-          });
-      }
-
-      setManifestacao(prev => ({ ...prev, ...updatedData, solicitante_cpf: prev.solicitante_cpf }));
-      setRespostaAdminInput(updatedData.resposta_admin || "");
-      setMensagem("Resposta enviada com sucesso!");
-      
-      fetchManifestacao();
-
-    } catch (err) {
-      console.error("Erro ao enviar resposta:", err);
-      setMensagem("Erro ao enviar resposta: " + err.message);
-    } finally {
-      setEnviando(false);
-      setArquivoResposta(null);
+      const data = new Date(dataISO);
+      if (isNaN(data.getTime())) return null;
+      const dia = String(data.getDate()).padStart(2, '0');
+      const mes = String(data.getMonth() + 1).padStart(2, '0');
+      const ano = data.getFullYear();
+      const hora = String(data.getHours()).padStart(2, '0');
+      const minuto = String(data.getMinutes()).padStart(2, '0');
+      return `Respondido em ${dia}/${mes}/${ano} às ${hora}:${minuto}`;
+    } catch (e) {
+      console.error("Erro ao formatar data_resposta:", dataISO, e);
+      return null;
     }
   };
 
-  const gerarPDF = () => {
-      if (!manifestacao) return;
-      setIsGerandoPDF(true);
-      try {
-        const doc = new jsPDF();
-        
-        doc.setFontSize(16);
-        doc.text("Detalhes da Manifestação - Ouvidoria", 10, 20);
-        
-        doc.setFontSize(12);
-        let y = 30;
-        
-        doc.text(`Protocolo: ${manifestacao.protocolo}`, 10, y);
-        y += 10;
-        doc.text(`Status: ${manifestacao.status}`, 10, y);
-        y += 10;
-        doc.text(`Tipo: ${manifestacao.tipo}`, 10, y);
-        y += 10;
-        doc.text(`Assunto: ${manifestacao.assunto || 'N/A'}`, 10, y);
-        y += 10;
-        
-        if (manifestacao.solicitante_nome) {
-            doc.text(`Solicitante: ${manifestacao.solicitante_nome}`, 10, y);
-            y += 10;
-            doc.text(`CPF: ${formatarCPF(manifestacao.solicitante_cpf)}`, 10, y);
-            y += 10;
-        } else {
-            doc.text("Solicitante: Anônimo", 10, y);
-            y += 10;
-        }
-        
-        doc.text(`Vereador Destino: ${vereadorNome}`, 10, y);
-        y += 15;
-        
-        doc.setFontSize(14);
-        doc.text("Mensagem:", 10, y);
-        y += 10;
-        doc.setFontSize(12);
-        
-        const splitDesc = doc.splitTextToSize(manifestacao.descricao, 180);
-        doc.text(splitDesc, 10, y);
-        y += (splitDesc.length * 7) + 10;
-        
-        if (manifestacao.resposta_admin) {
-            doc.setFontSize(14);
-            doc.text("Resposta da Ouvidoria:", 10, y);
-            y += 10;
-            doc.setFontSize(12);
-            
-            const splitResp = doc.splitTextToSize(manifestacao.resposta_admin, 180);
-            doc.text(splitResp, 10, y);
-        }
-        
-        doc.save(`manifestacao_${manifestacao.protocolo}.pdf`);
-      } catch (e) { 
-        console.error(e); 
-        alert("Erro ao gerar PDF");
-      } finally { 
-        setIsGerandoPDF(false); 
-      }
-  };
+const enviarResposta = async () => {
+  const respostaDigitada = respostaAdminInput.trim();
 
-  const anexosCidadao = manifestacao?.anexos?.filter(a => !a.arquivo_resposta) || [];
-  const anexosResposta = manifestacao?.anexos?.filter(a => a.arquivo_resposta) || [];
+  if (!respostaDigitada) {
+    setMensagem("Escreva uma resposta.");
+    setRespostaVazia(true);
+    respostaRef.current?.scrollIntoView({ behavior: "smooth" });
+    return;
+  }
+
+  setMensagem("");
+  setRespostaVazia(false);
+  setEnviando(true);
+
+  try {
+    const agora = new Date();
+
+    // 1. Atualiza a resposta no Supabase
+    const { data: updatedData, error: updateError } = await supabase
+      .from("solicitacoes")
+      .update({
+        resposta_admin: respostaDigitada,
+        data_resposta: agora.toISOString(),
+        status: "Finalizado",
+      })
+      .eq("protocolo", protocolo)
+      .select()
+      .single();
+
+    if (updateError) throw updateError;
+
+    // 2. Se houver arquivo de resposta, faz upload
+    if (arquivoResposta) {
+      const file = arquivoResposta;
+
+      const safeFileName = file.name
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/\s+/g, "-");
+
+      const filePath = `respostas/${protocolo}-${Date.now()}-${safeFileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("anexos-ouvidoria")
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      // 3. Registra anexo no banco
+      await supabase.from("anexos").insert({
+        id_solicitacao: updatedData.id,
+        caminho_arquivo: filePath,
+        nome_original: file.name,
+        arquivo_resposta: true,
+      });
+    }
+
+    // 4. Atualiza frontend
+     fetchManifestacao();
+    setManifestacao(updatedData);
+    setRespostaAdminInput(updatedData.resposta_admin || "");
+    setMensagem("Resposta enviada com sucesso!");
+  } catch (err) {
+    console.error("Erro ao enviar resposta:", err);
+    setMensagem("Erro ao enviar resposta: " + err.message);
+  } finally {
+    setEnviando(false);
+    setArquivoResposta(null);
+  }
+};
+
+// Definir anexos do cidadão e anexos da resposta
+const anexosCidadao = manifestacao?.anexos?.filter(a => !a.arquivo_resposta) || [];
+const anexosResposta = manifestacao?.anexos?.filter(a => a.arquivo_resposta) || [];
+
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
-      <button onClick={() => navigate(-1)} className="text-gray-600 hover:text-blue-700 text-2xl mb-4"><GoArrowLeft /></button>
+      <button
+        type="button"
+        onClick={() => navigate(-1)}
+        className="text-gray-600 hover:text-blue-700 cursor-pointer text-2xl w-fit mb-4"
+        aria-label="Voltar"
+      >
+        <GoArrowLeft />
+      </button>
 
-      {carregando ? <p className="text-center mt-4">Carregando...</p> : 
-       error ? <p className="text-center text-red-600">{error}</p> : 
-       !manifestacao ? <p className="text-center">Não encontrado.</p> : (
+      {carregando ? (
+        <p className="text-center mt-4 text-gray-700">Carregando...</p>
+      ) : error ? (
+        <p className="text-center mt-4 text-red-600">Erro: {error}</p>
+      ) : !manifestacao ? (
+        <p className="text-center mt-4 text-gray-700">Carregando detalhes ou manifestação não encontrada.</p>
+      ) : (
         <div className="max-w-3xl mx-auto bg-white shadow-md rounded-lg p-6">
-           <h2 className="text-2xl font-bold mb-4 text-gray-800">Detalhes da Manifestação</h2>
-           
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 border-b pb-4 text-sm text-gray-700">
-             <div><span className="font-bold">Protocolo:</span> {manifestacao.protocolo}</div>
-             <div><span className="font-bold">Status:</span> {manifestacao.status}</div>
-             <div><span className="font-bold">Vereador:</span> {vereadorNome}</div>
-             <div className="md:col-span-2 mt-2 bg-gray-50 p-3 rounded border">
-                <p className="font-bold text-blue-900">Dados do Solicitante:</p>
-                {manifestacao.solicitante_nome ? (
-                    <>
-                        <p>Nome: {manifestacao.solicitante_nome}</p>
-                        <p>CPF: {formatarCPF(manifestacao.solicitante_cpf)}</p>
-                        <p>Contato: {manifestacao.solicitante_contato}</p>
-                    </>
-                ) : <p>Anônimo</p>}
-             </div>
-           </div>
+          <h2 className="text-2xl font-bold mb-4 text-gray-800">
+            Detalhes da Manifestação
+          </h2>
 
-           <div className="mb-4">
-                <p className="font-semibold text-gray-700">Descrição:</p>
-                <p className="mt-1 bg-gray-50 p-3 rounded border whitespace-pre-wrap">{manifestacao.descricao}</p>
-           </div>
-
-          {anexosCidadao.length > 0 && (
-            <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-700">Anexos do Cidadão</h3>
-                <ul className="list-disc list-inside mt-1">
-                    {anexosCidadao.map((anexo, index) => (
-                    <li key={index}>
-                        <a href={`${supabase.storage.url}/object/public/anexos-ouvidoria/${anexo.caminho_arquivo}`} target="_blank" rel="noreferrer" className="text-blue-600 underline">
-                        {anexo.nome_original}
-                        </a>
-                    </li>
-                    ))}
-                </ul>
-            </div>
-          )}
-
-          <div className="mt-6 border-t pt-4">
-            <label className="block font-semibold mb-2 text-gray-700">Resposta da Ouvidoria</label>
+          <div className="space-y-3 mb-4 pb-4">
+            <p><strong>Protocolo:</strong> <span className="font-mono bg-gray-100 px-2 py-1 rounded">{manifestacao.protocolo}</span></p>
             
-            {manifestacao.status !== 'Finalizado' ? (
-               <div className="space-y-3">
-                   <textarea
-                     ref={respostaRef}
-                     className={`w-full border rounded p-2 ${respostaVazia ? "border-red-500" : "border-gray-300"}`}
-                     rows={5}
-                     value={respostaAdminInput}
-                     onChange={(e) => setRespostaAdminInput(e.target.value)}
-                     disabled={enviando}
-                     placeholder="Digite a resposta aqui..."
-                   />
-                   
-                   <div>
-                       <label className="block text-sm font-medium mb-1">Anexar arquivo à resposta (opcional):</label>
-                       <input 
-                           type="file" 
-                           onChange={handleArquivoRespostaChange}
-                           className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                       />
-                   </div>
-               </div>
-            ) : (
-              <div className="bg-blue-50 p-3 rounded-md border border-blue-200 text-blue-900">
-                  <p className="whitespace-pre-wrap">{manifestacao.resposta_admin || '[Sem texto]'}</p>
-                  
-                  {manifestacao.data_resposta && (
-                    <p className="text-xs text-gray-500 mt-2 text-right">
-                      {formatarDataHoraResposta(manifestacao.data_resposta)}
-                    </p>
-                  )}
+            <p><strong>Registrado em:</strong> {new Date(manifestacao.created_at).toLocaleString("pt-BR")}</p>
+            <p><strong>Status:</strong> <span className={`font-semibold px-2 py-1 rounded ${manifestacao.status === 'Pendente' ? 'bg-yellow-200 text-yellow-800' : manifestacao.status === 'Em análise' ? 'bg-blue-200 text-blue-800' : 'bg-green-200 text-green-800'}`}>{manifestacao.status}</span></p>
+            <p><strong>Tipo:</strong> {manifestacao.tipo}</p>
+            <p><strong>Assunto:</strong> {manifestacao.assunto}</p>
+            <p><strong>CPF:</strong> {manifestacao.solicitante_cpf  || "Não informado"}</p>
+            <p><strong>Solicitante:</strong> {manifestacao.solicitante_nome || 'Anônimo'}</p>
+            <p><strong>Telefone:</strong> {manifestacao.solicitante_contato || "Não informado"}</p>
+            <p><strong>Vereador Destino:</strong> {vereadorNome}</p>
+          </div>
 
-                  {anexosResposta.length > 0 && (
-                      <div className="mt-3 pt-3 border-t border-blue-200">
-                          <p className="font-bold text-xs uppercase mb-1">Anexos da Resposta:</p>
-                          <ul className="list-disc list-inside text-sm">
-                              {anexosResposta.map((anexo, index) => (
-                                  <li key={index}>
-                                      <a href={`${supabase.storage.url}/object/public/anexos-ouvidoria/${anexo.caminho_arquivo}`} target="_blank" rel="noreferrer" className="text-blue-700 underline font-medium">
-                                          {anexo.nome_original}
-                                      </a>
-                                  </li>
-                              ))}
-                          </ul>
-                      </div>
-                  )}
+          <div className="mb-4">
+            <p className="font-semibold text-gray-700">Descrição da Manifestação:</p>
+            <p className="mt-1 bg-gray-50 p-3 rounded border whitespace-pre-wrap">{manifestacao.descricao}</p>
+          </div>
+
+         <div>
+  <h3 className="text-xl font-semibold text-gray-700">Anexos</h3>
+
+  {/* Anexos do cidadão */}
+  {anexosCidadao.length > 0 ? (
+    <ul className="list-disc list-inside mt-2 space-y-1">
+      {anexosCidadao.map((anexo, index) => (
+        <li key={index}>
+          <a
+            href={`${supabase.storage.url}/object/public/anexos-ouvidoria/${anexo.caminho_arquivo}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 underline hover:text-blue-800 transition-colors"
+          >
+            {anexo.nome_original || "Ver anexo"}
+          </a>
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <p className="mt-2 text-gray-500">Sem anexos do cidadão.</p>
+  )}
+
+</div>
+
+            
+          
+        
+          <div className="mt-6">
+            <label htmlFor="resposta-admin-textarea" className="block font-semibold mb-2 text-gray-700">
+              Resposta da Ouvidoria
+            </label>
+            {manifestacao.status !== 'Finalizado' ? (
+              <textarea
+                id="resposta-admin-textarea"
+                ref={respostaRef}
+                className={`w-full border rounded p-2 whitespace-pre-wrap ${respostaVazia ? "border-red-500 ring-1 ring-red-500" : "border-gray-300"} focus:ring-2 focus:ring-blue-500 focus:outline-none`}
+                rows={5}
+                value={respostaAdminInput}
+                onChange={(e) => {
+                  setRespostaAdminInput(e.target.value);
+                  if (e.target.value.trim()) setRespostaVazia(false);
+                }}
+                disabled={enviando}
+                aria-invalid={respostaVazia}
+                aria-describedby={respostaVazia ? "resposta-error" : undefined}
+                placeholder="Digite a resposta aqui..."
+              />
+            ) : (
+              <div className="bg-blue-50 p-3 rounded-md border border-blue-200 text-blue-900 min-h-[100px]">
+                <p className="whitespace-pre-wrap">
+                  {manifestacao.resposta_admin || '[Nenhuma resposta registrada]'}
+                </p>
+                {manifestacao.data_resposta && (
+                  <p className="text-xs text-gray-500 mt-2">
+                    {formatarDataHoraResposta(manifestacao.data_resposta)}
+                  </p>
+                )}
               </div>
             )}
-             {respostaVazia && <p className="text-red-500 text-sm mt-1">{mensagem}</p>}
+            {respostaVazia && <p id="resposta-error" className="text-red-500 text-sm mt-1">{mensagem}</p>}
           </div>
+          <div className="mt-4">
+ {manifestacao.status !== "Finalizado" && (
+  <div className="mt-4">
+    <label className="block text-sm font-semibold mb-1">
+      Anexar arquivo à resposta (opcional):
+    </label>
 
-          <div className="mt-6 flex gap-4 justify-center">
+    <input
+      type="file"
+      accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+      onChange={handleFileChange}
+      className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 
+                file:rounded-md file:border-0 file:text-sm file:font-semibold
+                file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+    />
+
+   
+  </div>
+)}
+
+</div>
+          {/* Anexos da resposta do ouvidor */}
+  {anexosResposta.length > 0 && (
+    <div className="mt-4 border-t pt-3">
+      <p className="font-semibold text-gray-700">Anexos da Resposta:</p>
+
+      <ul className="list-disc list-inside mt-2 space-y-1">
+        {anexosResposta.map((anexo, index) => (
+          <li key={index}>
+            <a
+              href={`${supabase.storage.url}/object/public/anexos-ouvidoria/${anexo.caminho_arquivo}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-700 underline hover:text-blue-900"
+            >
+              {anexo.nome_original || "Baixar anexo"}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )}
+
+          {/* Botões */}
+          <div className="mt-6 flex flex-col sm:flex-row justify-center items-center gap-4">
             {manifestacao?.status !== 'Finalizado' && (
               <button
+                type="button"
                 onClick={enviarResposta}
                 disabled={enviando || !respostaAdminInput.trim()}
-                className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded shadow transition disabled:opacity-50"
+                className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded-md shadow transition w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {enviando ? "Enviando..." : "Enviar Resposta"}
+                {enviando ? "Enviando..." : "Enviar Resposta e Finalizar"}
               </button>
             )}
-            <button 
-                onClick={gerarPDF} 
-                disabled={isGerandoPDF}
-                className="bg-blue-700 text-white font-semibold px-6 py-2 rounded shadow hover:bg-blue-800 transition disabled:opacity-50"
-            >
-              {isGerandoPDF ? "Gerando..." : "Gerar Relatório"}
-            </button>
+
+            {/* Botão de PDF */}
+            <RelatorioVerDetalhes
+              manifestacao={manifestacao}
+              vereadorNome={vereadorNome}
+              ouvidorNome = {ouvidor?.nome_responsavel || "Não informado"}
+            />
           </div>
-           {mensagem && !respostaVazia && <p className="text-center mt-2 font-bold text-green-600">{mensagem}</p>}
+            
+          {mensagem && !respostaVazia && (
+            <p
+              className={`mt-4 text-center font-semibold ${mensagem.startsWith("Erro") ? "text-red-600" : "text-green-600"}`}
+            >
+              {mensagem}
+            </p>
+          )}
         </div>
       )}
     </div>

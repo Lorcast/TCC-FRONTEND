@@ -28,7 +28,6 @@ const HomePage = () => {
     
       <div className="absolute inset-0 bg-black bg-opacity-70 z-0"></div>
 
-     
       <div className="relative z-10 flex flex-col items-center text-center text-white">
       
         <img
@@ -37,7 +36,6 @@ const HomePage = () => {
           className="absolute top-[-180px] w-80 md:w-96 drop-shadow-lg"
         />
 
-      
         <div className="h-32 md:h-40"></div>
 
         <h1 className="text-4xl md:text-5xl font-extrabold drop-shadow-xl mb-2">

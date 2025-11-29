@@ -21,13 +21,12 @@ const CadastrarVereadores = () => {
   const [mensagemSucesso, setMensagemSucesso] = useState(null);
   const [mensagemErro, setMensagemErro] = useState(null);
 
-  // Função auxiliar para validar formato de e-mail
+
   const validateEmail = (email) => {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return regex.test(email);
   };
 
-  // Carregar dados do vereador
   useEffect(() => {
     const carregarDados = async () => {
       if (!id) return;
@@ -42,7 +41,6 @@ const CadastrarVereadores = () => {
         if (error) throw error;
 
         if (data) {
-          // Limpa aspas extras na situacao, se houver
           const situacaoTratada = data.situacao ? data.situacao.replace(/'/g, "") : "";
           setForm({ ...data, situacao: situacaoTratada });
         }
@@ -51,7 +49,6 @@ const CadastrarVereadores = () => {
         setMensagemErro("Erro ao carregar dados do vereador.");
       }
     };
-
     carregarDados();
   }, [id]);
 
@@ -86,7 +83,6 @@ const CadastrarVereadores = () => {
     setMensagemErro(null);
     setMensagemSucesso(null);
 
-    // Validação Front-end
     const novosErros = {};
     if (!form.nome_completo?.trim()) novosErros.nome_completo = "Digite o nome do vereador.";
     if (!form.partido?.trim()) novosErros.partido = "Digite o partido.";
@@ -102,7 +98,6 @@ const CadastrarVereadores = () => {
     }
 
     try {
-      // Verificar se o e-mail já existe no banco 
       let queryEmail = supabase
         .from("vereadores")
         .select("id")
@@ -119,10 +114,9 @@ const CadastrarVereadores = () => {
       if (emailExistente && emailExistente.length > 0) {
         setErros({ email_contato: "Este e-mail já está cadastrado para outro vereador." });
         setCarregando(false);
-        return; // Para o envio aqui
+        return; 
       }
 
-      // Se passou na validação, prossegue com Insert ou Update
       if (id) {
         const { error } = await supabase
           .from("vereadores")
@@ -131,10 +125,11 @@ const CadastrarVereadores = () => {
         if (error) throw error;
         setMensagemSucesso("Vereador atualizado com sucesso!");
       } else {
-        const { error } = await supabase.from("vereadores").insert([form]);
+        const { error } = await supabase
+        .from("vereadores")
+        .insert([form]);
         if (error) throw error;
         setMensagemSucesso("Vereador cadastrado com sucesso!");
-        // Limpa o formulário apenas no cadastro
         setForm({ nome_completo: "", partido: "", email_contato: "", legislatura: "", situacao: "" });
       }
 

@@ -26,7 +26,7 @@ const DenunciaForm = () => {
 
   const navigate = useNavigate();
 
-  // Buscar vereadores ativos
+  
   useEffect(() => {
     const fetchVereadores = async () => {
       const { data, error } = await supabase
@@ -42,10 +42,10 @@ const DenunciaForm = () => {
         setVereadores(data);
       }
     };
-    fetchVereadores(); //executa a função assim que o componente é carregado.
+    fetchVereadores(); 
   }, []);
 
-  // Máscaras e Validações
+  
   const aplicarMascaraTelefone = (valor) => valor.replace(/\D/g, "").replace(/(\d{2})(\d)/, "($1) $2").replace(/(\d{5})(\d)/, "$1-$2").substring(0, 15);
   
   const aplicarMascaraCPF = (valor) => valor.replace(/\D/g, "").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2").substring(0, 14);
@@ -98,7 +98,7 @@ const DenunciaForm = () => {
     
   }, []);
 
-  // Envio para Supabase 
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -229,8 +229,8 @@ const DenunciaForm = () => {
           {erros.assunto && <p className="text-red-500 text-sm mt-1">{erros.assunto}</p>}
         </div>
 
-        <div className="p-4 rounded-md border border-gray-200">
-          <label className="block font-medium mb-2">Identificação <span className="text-red-600">*</span></label>
+        <div>
+          <label className="block font-medium mb-1">Identificação <span className="text-red-600">*</span></label>
           <div className="flex gap-4 mb-4">
             {["anonimo", "identificado"].map((tipo) => (
               <label key={tipo} className="flex items-center gap-2 cursor-pointer">
@@ -240,12 +240,10 @@ const DenunciaForm = () => {
             ))}
           </div>
           {formManifestacao.identificacao === "identificado" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium mb-1">CPF <span className="text-red-600">*</span></label>
                 <input type="text" name="cpf" placeholder="000.000.000-00" value={formManifestacao.cpf} onChange={handleChange} maxLength="14" className="w-full p-2 border rounded-md" />
                 {erros.cpf && <p className="text-red-500 text-sm mt-1">{erros.cpf}</p>}
-              </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Nome <span className="text-red-600">*</span></label>
                 <input type="text" name="nome" value={formManifestacao.nome} onChange={handleChange} className="w-full p-2 border rounded-md" />

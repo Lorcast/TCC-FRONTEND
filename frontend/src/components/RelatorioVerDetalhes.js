@@ -1,7 +1,5 @@
 import React, { useState } from "react";
 import jsPDF from "jspdf";
-import { supabase } from "../supabaseClient";
-
 
 const RelatorioVerDetalhes = ({ manifestacao, vereadorNome, ouvidorNome }) => {
   const [isGerandoPDF, setIsGerandoPDF] = useState(false);
@@ -22,26 +20,7 @@ const RelatorioVerDetalhes = ({ manifestacao, vereadorNome, ouvidorNome }) => {
       return null;
     }
   };
-  const downloadArquivo = async (anexo) => {
-   try {
-      const { data, error } = await supabase.storage
-        .from("anexos-ouvidoria")
-        .download(anexo.caminho_arquivo);
-
-      if (error) throw error;
-
-      const url = URL.createObjectURL(data);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = anexo.nome_original || "anexo";
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error("Erro ao baixar anexo:", err);
-    }
-  };
+ 
 
   const gerarPDF = () => {
     if (!manifestacao) return;
@@ -53,13 +32,13 @@ const RelatorioVerDetalhes = ({ manifestacao, vereadorNome, ouvidorNome }) => {
       const margemEsquerda = 15;
       const larguraMaximaTexto = 180;
 
-      // --- Título ---
+      // Título 
       doc.setFontSize(18);
       doc.setFont("helvetica", "bold");
       doc.text("Detalhes da Manifestação", margemEsquerda, yPos);
       yPos += 10;
 
-      // --- Campos principais (Protocolo, Status, etc.) ---
+  
       const adicionarCampo = (rotulo, valor) => {
         doc.setFont("helvetica", "bold");
         doc.setFontSize(10);
@@ -87,7 +66,7 @@ const RelatorioVerDetalhes = ({ manifestacao, vereadorNome, ouvidorNome }) => {
 
       yPos += 5;
 
-      // --- Bloco de texto: Descrição ---
+      // descricao
       const adicionarBlocoTexto = (rotulo, texto) => {
         doc.setFont("helvetica", "bold");
         doc.setFontSize(10);
@@ -102,30 +81,27 @@ const RelatorioVerDetalhes = ({ manifestacao, vereadorNome, ouvidorNome }) => {
 
       adicionarBlocoTexto("Descrição da Manifestação:", manifestacao.descricao);
 
-      // --- Bloco de texto: Resposta da Ouvidoria ---
+     
       adicionarBlocoTexto(
         "Resposta da Ouvidoria:",
         manifestacao.resposta_admin || "[Não respondido]"
       );
 
-      // --- Data da resposta (se houver) ---
+     
       if (manifestacao.data_resposta) {
         const dataFormatada = formatarDataHoraResposta(manifestacao.data_resposta);
         if (dataFormatada) {
           doc.setFont("helvetica", "italic");
           doc.setFontSize(8);
-          yPos -= 3; // ajuste para ficar logo abaixo da resposta
+          yPos -= 3; 
           doc.text(dataFormatada, margemEsquerda, yPos);
           yPos += 10;
         }
       }
 
-      // --- Salvar PDF ---
+      // Salvar PDF
       doc.save(`manifestacao_${manifestacao.protocolo}.pdf`);
 
-      if(manifestacao.anexos?.length>0) {
-        manifestacao.anexos.forEach(downloadArquivo);
-      }
     } catch (err) {
       console.error("Erro ao gerar PDF:", err);
     } finally {
@@ -140,7 +116,7 @@ const RelatorioVerDetalhes = ({ manifestacao, vereadorNome, ouvidorNome }) => {
       disabled={isGerandoPDF}
       className="bg-blue-700 text-white font-semibold px-6 py-2 rounded-md shadow hover:bg-blue-800 transition w-full sm:w-auto disabled:opacity-50 disabled:cursor-wait"
     >
-      {isGerandoPDF ? "Gerando PDF..." : "Gerar Relatório PDF e Baixar Anexos"}
+      {isGerandoPDF ? "Gerando PDF..." : "Gerar Relatório PDF"}
     </button>
   );
 };
