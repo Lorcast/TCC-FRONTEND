@@ -262,7 +262,11 @@ const BuscaRelatorio = ({ filtrar }) => {
           <option value="Finalizado">Finalizado</option>
         </select>
 
-        <input type="text" placeholder="Assunto" value={assunto} onChange={(e) => setAssunto(e.target.value)} className="border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none" />
+        <input 
+        type="text" 
+        placeholder="Assunto" 
+        value={assunto} onChange={(e) => setAssunto(e.target.value)} 
+        className="border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none" />
         
         <div className="flex flex-col">
             <span className="text-xs text-gray-500 mb-1 ml-1">De:</span>
@@ -277,7 +281,7 @@ const BuscaRelatorio = ({ filtrar }) => {
       </div>
 
       {/* Botões de Ação */}
-      <div className="flex flex-wrap justify-end mt-6 gap-3 border-t pt-4">
+      <div className="flex flex-wrap justify-end mt-6 gap-3  pt-4">
         
         {/* Botão Buscar (Principal) */}
         <button
@@ -287,8 +291,6 @@ const BuscaRelatorio = ({ filtrar }) => {
         >
           <FaSearch /> Buscar
         </button>
-
-        <div className="w-px bg-gray-300 mx-2 hidden md:block"></div> {/* Separador visual */}
 
         {/* Botão Relatório GERAL */}
         <button 

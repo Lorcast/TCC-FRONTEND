@@ -1,35 +1,40 @@
-// src/components/NavBar.js
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../hooks/useAuth"; 
+import { useAuth } from "../hooks/useAuth"; // Importa o hook useAuth
 
 const NavBar = () => {
   const navigate = useNavigate();
   const { logout } = useAuth(); 
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // Função logout do hook
   const handleLogout = async () => {
+    
     await logout();
     navigate("/login", { replace: true });
     setMenuOpen(false); 
   };
 
+  
   return (
     <header className="bg-blue-900 text-white px-6 py-4 fixed w-full top-0 z-50 shadow-md">
       <div className="flex justify-between items-center">
         {/* Título */}
-        <h1 className="text-xl font-bold">Ouvidoria - Administrador</h1> {/* Ajustado título */}
+       <button
+  onClick={() => navigate("/")} // <-- Coloque o caminho da sua home
+  className="text-xl font-bold hover:underline"
+>
+  Ouvidoria - Administrador
+</button>
 
-        {/* Botão menu mobile */}
+        
         <button
           className="sm:hidden focus:outline-none"
           onClick={() => setMenuOpen(!menuOpen)}
-          aria-label={menuOpen ? "Fechar menu" : "Abrir menu"} // Acessibilidade
-          aria-expanded={menuOpen} 
+          aria-label={menuOpen ? "Fechar menu" : "Abrir menu"} 
+          aria-expanded={menuOpen}
         >
-          <svg >
-             {}
+          <svg  >
+            
           </svg>
         </button>
 

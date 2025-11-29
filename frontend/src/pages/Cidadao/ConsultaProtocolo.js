@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { GoArrowLeft } from "react-icons/go";
 import { supabase } from '../../supabaseClient';
@@ -48,6 +48,8 @@ const ConsultaProtocolo = () => {
           descricao,
           resposta_admin,
           data_resposta,
+          vereadores (nome_completo),
+          tipo,
           anexos ( caminho_arquivo, nome_original, arquivo_resposta )
         `)
         .eq('protocolo', protocoloDigitado.trim())
@@ -71,12 +73,7 @@ const ConsultaProtocolo = () => {
     }
   };
 
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      buscarManifestacao();
-    }
-  };
-
+  
   // Filtrar os anexos para separar o que é do cidadão e o que é resposta
   const anexosCidadao = resultado?.anexos?.filter(a => !a.arquivo_resposta) || [];
   const anexosResposta = resultado?.anexos?.filter(a => a.arquivo_resposta) || [];
@@ -102,7 +99,6 @@ const ConsultaProtocolo = () => {
           placeholder="Digite o número do protocolo"
           value={protocoloDigitado}
           onChange={(e) => setProtocoloDigitado(e.target.value)}
-          onKeyPress={handleKeyPress}
           className="w-full sm:w-auto flex-1 px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           aria-label="Número do Protocolo"
         />
@@ -133,11 +129,12 @@ const ConsultaProtocolo = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-700">
                 <div><strong>Protocolo:</strong> <span className="font-mono bg-gray-100 px-1 rounded">{resultado.protocolo}</span></div>
                 <div><strong>Registrado em:</strong> {new Date(resultado.created_at).toLocaleString('pt-BR')}</div>
+                <div><strong>Vereador:</strong> <span className="font-mono bg-gray-100 px-1 rounded">{resultado.vereadores.nome_completo}</span></div>
+                <div><strong>Tipo:</strong> <span className="font-mono bg-gray-100 px-1 rounded">{resultado.tipo}</span></div>
                 <div className="sm:col-span-2">
                     <strong>Status:</strong> <span className={`font-semibold px-2 py-1 rounded-full text-xs ${
                         resultado.status === 'Pendente' ? 'bg-yellow-200 text-yellow-800' : 
-                        resultado.status === 'Em análise' ? 'bg-blue-200 text-blue-800' : 
-                        'bg-green-200 text-green-800'
+                        resultado.status === 'Em análise' ? 'bg-blue-200 text-blue-800' :                      'bg-green-200 text-green-800'
                     }`}>{resultado.status}</span>
                 </div>
             </div>
@@ -174,7 +171,7 @@ const ConsultaProtocolo = () => {
               <div className="mt-1 bg-blue-50 p-3 rounded-md border border-blue-200 text-blue-900">
                 <p className="whitespace-pre-wrap">{resultado.resposta_admin || 'Sua manifestação ainda não foi respondida.'}</p>
                 
-                {/* Anexos da Resposta do Admin */}
+                
                 {anexosResposta.length > 0 && (
                     <div className="mt-3 pt-3 border-t border-blue-200">
                         <p className="font-bold text-xs uppercase mb-1 text-blue-800">Anexos da Resposta:</p>

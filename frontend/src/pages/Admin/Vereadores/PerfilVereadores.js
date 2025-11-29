@@ -6,13 +6,11 @@ import ProtecaoAdmin from "../../../components/ProtecaoAdmin";
 import Paginacao from "../../../components/Paginacao";
 import NavBar from "../../../components/NavBar";
 
-const PerfilVereadores = () => {
-  // Estados dos inputs 
+const PerfilVereadores = () => { 
   const [nome, setNome] = useState("");
   const [legislatura, setLegislatura] = useState("");
   const [situacao, setSituacao] = useState(""); 
-  
-  // Estado dos filtros aplicados 
+   
   const [filtrosAtivos, setFiltrosAtivos] = useState({
     nome: "",
     legislatura: "",
@@ -30,7 +28,6 @@ const PerfilVereadores = () => {
 
   const navigate = useNavigate();
 
-  // Buscar vereadores com filtros
   const fetchVereadores = useCallback(
     async (filtros, offsetAtual) => {
       setCarregando(true);
@@ -44,7 +41,6 @@ const PerfilVereadores = () => {
             { count: "exact" }
           );
 
-        // Usa os filtros passados como argumento
         if (filtros.nome.trim() !== "") {
           query = query.ilike("nome_completo", `%${filtros.nome.trim()}%`);
         }
@@ -78,7 +74,6 @@ const PerfilVereadores = () => {
     [limite]
   );
 
-  // Busca legislaturas únicas
   const fetchLegislaturas = async () => {
     try {
       const { data, error } = await supabase
@@ -95,19 +90,16 @@ const PerfilVereadores = () => {
     }
   };
 
-  // Carrega legislaturas ao iniciar
   useEffect(() => {
     fetchLegislaturas();
   }, []);
 
-  // Dispara quando offset muda OU quando filtrosAtivos mudam
   useEffect(() => {
     fetchVereadores(filtrosAtivos, offset);
   }, [offset, filtrosAtivos, fetchVereadores]); 
   
   const aplicarFiltros = () => {
-    setOffset(0); // Reseta paginação
-    // Atualiza os filtros ativos com o que está nos inputs. 
+    setOffset(0); 
     setFiltrosAtivos({
         nome, 
         legislatura, 
@@ -124,59 +116,54 @@ const PerfilVereadores = () => {
             type="button"
             onClick={() => navigate(-1)}
             className="text-gray-600 hover:text-blue-700 cursor-pointer text-2xl w-fit mb-4"
-            aria-label="Voltar"
-          >
+            >
             <GoArrowLeft />
           </button>
 
-          {/* Filtros */}
+          
           <div className="bg-white shadow-md rounded-lg p-6 mb-6">
             <h2 className="text-xl font-semibold mb-4">Gerenciar Vereadores</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
-              {/* Nome */}
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
-                <input
+               <input
                   type="text"
                   value={nome}
                   onChange={(e) => setNome(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && aplicarFiltros()}
-                  className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   placeholder="Nome do vereador"
+                  className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  
                 />
               </div>
 
-              {/* Legislatura */}
+             
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Legislatura</label>
                 <select
                   value={legislatura}
                   onChange={(e) => setLegislatura(e.target.value)}
                   className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 >
-                  <option value="">Todos</option>
+                  <option value="">Todas legislaturas</option>
                   {legislaturas.map((l) => (
                     <option key={l} value={l}>{l}</option>
                   ))}
                 </select>
               </div>
 
-              {/* Situação */}
+              
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Situação</label>
                 <select
                   value={situacao}
                   onChange={(e) => setSituacao(e.target.value)}
                   className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 >
-                  <option value="">Todos</option>
+                  <option value="">Todas situações</option>
                   <option value="Ativo">Ativo</option>
                   <option value="Inativo">Inativo</option>
                 </select>
               </div>
 
-              {/* Botões */}
+              
               <div className="md:col-span-6 mt-2 md:mt-0 flex gap-2">
                 <button
                   onClick={aplicarFiltros}

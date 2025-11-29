@@ -54,9 +54,7 @@ const Login = () => {
 
     if (usuarioLogado) {
       setMensagemSucesso("Login realizado com sucesso! Redirecionando...");
-      setTimeout(() => {
-        navigate("/admin", { replace: true });
-      }, 1500); 
+    
     }
   };
 
