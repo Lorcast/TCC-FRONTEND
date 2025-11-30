@@ -10,7 +10,7 @@ const Login = () => {
     senha: "",
   });
 
-  const [mensagemSucesso, setMensagemSucesso] = useState("");
+ 
   const [erros, setErros] = useState({});
   const { login, loading, authError, user } = useAuth(); // pq esse não passa um paraemtro?
   const navigate = useNavigate();
@@ -19,6 +19,7 @@ const Login = () => {
   useEffect(() => {
     if (user) {
       navigate("/admin", { replace: true }); 
+      
     }
   }, [user, navigate]);
 
@@ -40,7 +41,7 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMensagemSucesso("");
+   
     setErros({});
 
     const errosValidados = validarCampos();
@@ -50,12 +51,9 @@ const Login = () => {
     }
 
     const { email, senha } = formularioLogin;
-    const usuarioLogado = await login(email, senha);
+    login(email, senha);
 
-    if (usuarioLogado) {
-      setMensagemSucesso("Login realizado com sucesso! Redirecionando...");
     
-    }
   };
 
   return (
@@ -127,7 +125,7 @@ const Login = () => {
           </div>
 
           {authError && <p className="text-red-600 text-center">{authError}</p>}
-          {mensagemSucesso && <p className="text-green-600 text-center">{mensagemSucesso}</p>}
+        
 
           <div className="flex justify-center">
             <button
