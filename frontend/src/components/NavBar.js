@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../hooks/useAuth"; // Importa o hook useAuth
+import { useAuth } from "../hooks/useAuth"; 
+import { GiHamburgerMenu } from "react-icons/gi";
 
 const NavBar = () => {
   const navigate = useNavigate();
@@ -18,29 +19,27 @@ const NavBar = () => {
   return (
     <header className="bg-blue-900 text-white px-6 py-4 fixed w-full top-0 z-50 shadow-md">
       <div className="flex justify-between items-center">
-        {/* Título */}
+      
        <button
-  onClick={() => navigate("/")} // <-- Coloque o caminho da sua home
+  onClick={() => navigate("/")} 
   className="text-xl font-bold hover:underline"
 >
   Ouvidoria - Administrador
 </button>
 
         
-        <button
-          className="sm:hidden focus:outline-none"
-          onClick={() => setMenuOpen(!menuOpen)}
-          aria-label={menuOpen ? "Fechar menu" : "Abrir menu"} 
-          aria-expanded={menuOpen}
-        >
-          <svg  >
-            
-          </svg>
-        </button>
+       <button
+  className="sm:hidden focus:outline-none"
+  onClick={() => setMenuOpen(!menuOpen)}
+  aria-label={menuOpen ? "Fechar menu" : "Abrir menu"} 
+  aria-expanded={menuOpen}
+>
+  <GiHamburgerMenu size={24} /> 
+</button>
 
         {/* Navegação desktop */}
 
-        <nav className="hidden sm:flex space-x-6">
+      <nav className="hidden sm:flex space-x-6">
       <button
         onClick={() => navigate("/admin/vereadores")}
         className="hover:underline"
